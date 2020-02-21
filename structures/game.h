@@ -22,11 +22,18 @@ struct GamePiece_ {
 
 struct PlayedGamePiece_ {
 
-    struct Player_ *owner;
+    enum {
+        OWN_PIECE,
+        PLAYED_PIECE
+    } pieceType;
 
-    struct GamePiece_ *piece;
+    struct {
+        struct GamePiece_ *piece;
 
-    Position *position;
+        int hit;
+    };
+
+    Position **position;
 
 };
 
@@ -36,7 +43,7 @@ struct Game_ {
 
     struct Player_ **players;
 
-    GameStorage *storage;
+    GameStorage *ourGame, *opponentGame;
 
 };
 
@@ -59,9 +66,13 @@ char* g_getPieceName(GamePiece *);
  */
 void g_freePiece(GamePiece *);
 
-PlayedGamePiece* initPlayedPiece(GamePiece *, Player *, Position *);
+PlayedGamePiece* initPlayedPiece(GamePiece *, Position *);
+
+PlayedGamePiece* initAttemptPiece(int hit, Position *);
 
 GamePiece * g_getGamePiece(PlayedGamePiece *);
+
+int g_isHit(PlayedGamePiece *);
 
 Position * g_getPlayedPosition(PlayedGamePiece *);
 

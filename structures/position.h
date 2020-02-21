@@ -10,20 +10,16 @@ typedef enum {
 
 struct Position_ {
 
-    int baseX, baseY;
-
-    PLACED_DIRECTION direction;
+    int x, y;
 };
 
 typedef struct Position_ Position;
 
-Position *initPos(int baseX, int baseY, PLACED_DIRECTION dir);
+Position *initPos(int, int);
 
 int p_getBaseX(Position *);
 
 int p_getBaseY(Position *);
-
-PLACED_DIRECTION p_getDirection(Position *);
 
 void p_free(Position *);
 

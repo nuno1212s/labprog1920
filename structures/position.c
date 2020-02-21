@@ -1,30 +1,25 @@
 #include "position.h"
 #include <stdlib.h>
 
-Position* initPos(int baseX, int baseY, PLACED_DIRECTION dir) {
+Position* initPos(int baseX, int baseY) {
 
     Position *pos = malloc(sizeof(Position));
 
-    pos->baseX = baseX;
+    pos->x = baseX;
 
-    pos->baseY = baseY;
-
-    pos->direction = dir;
+    pos->y = baseY;
 
     return pos;
 }
 
 int p_getBaseX(Position *p) {
-    return p->baseX;
+    return p->x;
 }
 
 int p_getBaseY(Position *p) {
-    return p->baseY;
+    return p->y;
 }
 
-PLACED_DIRECTION p_getDirection(Position *p) {
-    return p->direction;
-}
 
 void p_free(Position *p) {
     free(p);
