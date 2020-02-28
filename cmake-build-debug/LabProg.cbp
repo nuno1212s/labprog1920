@@ -99,6 +99,12 @@
 		<Unit filename="/home/nuno/CLionProjects/LabProg/structures/position.h">
 			<Option target="LabProg"/>
 		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/LabProg/structures/quadtree.c">
+			<Option target="LabProg"/>
+		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/LabProg/structures/quadtree.h">
+			<Option target="LabProg"/>
+		</Unit>
 		<Unit filename="/home/nuno/CLionProjects/LabProg/CMakeLists.txt">
 			<Option virtualFolder="CMake Files\"/>
 		</Unit>
