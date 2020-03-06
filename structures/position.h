@@ -24,6 +24,10 @@ int p_getBaseX(Position *);
 
 int p_getBaseY(Position *);
 
+/**
+ * Compares two positions
+ * @return != 0 If the positions match, 0 if they don't
+ */
 int p_comparePositions(Position *, Position *);
 
 Position *addTo(Position *, Position *);

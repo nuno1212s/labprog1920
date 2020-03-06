@@ -81,6 +81,18 @@
 		<Unit filename="/home/nuno/CLionProjects/LabProg/main.c">
 			<Option target="LabProg"/>
 		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/LabProg/storagestructures/matrix.c">
+			<Option target="LabProg"/>
+		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/LabProg/storagestructures/matrix.h">
+			<Option target="LabProg"/>
+		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/LabProg/storagestructures/quadtree.c">
+			<Option target="LabProg"/>
+		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/LabProg/storagestructures/quadtree.h">
+			<Option target="LabProg"/>
+		</Unit>
 		<Unit filename="/home/nuno/CLionProjects/LabProg/structures/game.c">
 			<Option target="LabProg"/>
 		</Unit>
@@ -93,16 +105,16 @@
 		<Unit filename="/home/nuno/CLionProjects/LabProg/structures/gamestructures.h">
 			<Option target="LabProg"/>
 		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/LabProg/structures/pieces.c">
+			<Option target="LabProg"/>
+		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/LabProg/structures/pieces.h">
+			<Option target="LabProg"/>
+		</Unit>
 		<Unit filename="/home/nuno/CLionProjects/LabProg/structures/position.c">
 			<Option target="LabProg"/>
 		</Unit>
 		<Unit filename="/home/nuno/CLionProjects/LabProg/structures/position.h">
-			<Option target="LabProg"/>
-		</Unit>
-		<Unit filename="/home/nuno/CLionProjects/LabProg/structures/quadtree.c">
-			<Option target="LabProg"/>
-		</Unit>
-		<Unit filename="/home/nuno/CLionProjects/LabProg/structures/quadtree.h">
 			<Option target="LabProg"/>
 		</Unit>
 		<Unit filename="/home/nuno/CLionProjects/LabProg/CMakeLists.txt">

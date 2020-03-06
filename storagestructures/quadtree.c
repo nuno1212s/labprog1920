@@ -20,14 +20,19 @@ INSERT_RESULT insertIntoNode(struct Node_ *node, QuadPoint *pos);
 
 INSERT_RESULT insertIntoLeaf(struct LeafNode_ *node, QuadPoint *pos);
 
+QuadPoint *initQuadPoint(Position *, void *);
+
+void freeQuadPoint(QuadPoint *);
+
 QuadPoint *lookupQuad(struct QuadNode_ *node, Position *pos);
 
 QuadPoint *lookupNode(struct Node_ *node, Position *pos);
 
 QuadPoint *lookupLeaf(struct LeafNode_ *node, Position *pos);
 
-void freeQuadNode(struct QuadNode_ *node);
+QuadPoint* deleteQuad(struct QuadNode_ *, Position *);
 
+void freeQuadNode(struct QuadNode_ *node);
 
 QuadTree *initQuadTree(Position *topLeft, Position *bottomRight) {
 
@@ -47,6 +52,10 @@ QuadPoint *initQuadPoint(Position *pos, void *value) {
     quadPoint->value = value;
 
     return quadPoint;
+}
+
+void *getValue(QuadPoint *point) {
+    return point->value;
 }
 
 struct QuadNode_ *initQuadNode(Position *topLeft, Position *bottomRight, NodeKind kind, void *nodeValue) {
@@ -82,27 +91,23 @@ struct QuadNode_ *initNode(Position *topLeft, Position *bottomRight) {
     int midX = (p_getBaseX(topLeft) + p_getBaseX(bottomRight)) / 2,
             midY = (p_getBaseY(topLeft) + p_getBaseY(bottomRight)) / 2;
 
-    Position *mid = initPos(midX, midY),
-            *topMid = initPos(midX, p_getBaseY(topLeft)),
-            *midRight = initPos(p_getBaseX(bottomRight), midY),
-            *midLeft = initPos(p_getBaseX(topLeft), midY),
-            *bottomMid = initPos(midX, p_getBaseY(bottomRight));
+    //Allocate positions in the stack as it's much faster
+    //And these positions are disposable anyway
+    Position mid = {midX, midY},
+            topMid = {midX, p_getBaseY(topLeft)},
+            midRight = {p_getBaseX(bottomRight), midY},
+            midLeft = {p_getBaseX(topLeft), midY},
+            bottomMid = {midX, p_getBaseY(bottomRight)};
 
-    struct QuadNode_ *topLeftChild = initLeaf(topLeft, mid),
-            *topRightChild = initLeaf(topMid, midRight),
-            *bottomLeftChild = initLeaf(midLeft, bottomMid),
-            *bottomRightChild = initLeaf(mid, bottomRight);
+    struct QuadNode_ *topLeftChild = initLeaf(topLeft, &mid),
+            *topRightChild = initLeaf(&topMid, &midRight),
+            *bottomLeftChild = initLeaf(&midLeft, &bottomMid),
+            *bottomRightChild = initLeaf(&mid, bottomRight);
 
     node->children[0] = topLeftChild;
     node->children[1] = topRightChild;
     node->children[2] = bottomLeftChild;
     node->children[3] = bottomRightChild;
-
-    p_free(mid);
-    p_free(topMid);
-    p_free(midRight);
-    p_free(midLeft);
-    p_free(bottomMid);
 
     node->stored = 4;
 
@@ -174,27 +179,40 @@ INSERT_RESULT insertIntoLeaf(struct LeafNode_ *node, QuadPoint *pos) {
     return I_FAILED_FULL;
 }
 
-void insert(QuadTree *quad, QuadPoint *pos) {
+void qt_insert(QuadTree *quad, Position *pos, void *value) {
 
     struct QuadNode_ *node = quad->rootNode;
 
-    INSERT_RESULT result = insertNode(node, pos);
+    QuadPoint *point = qt_lookup(quad, pos);
+
+    if (point == NULL) {
+        point = initQuadPoint(pos, value);
+    } else {
+        point->value = value;
+    }
+
+    INSERT_RESULT result = insertNode(node, point);
 
     if (result == I_FAILED_FULL) {
 
         //Divide the node
         quad->rootNode = divideLeafNode(node);
 
-        insert(quad, pos);
+        insertNode(quad->rootNode, point);
     }
 
 }
 
-QuadPoint *lookup(QuadTree* quad, Position *pos) {
+void *qt_lookup(QuadTree *quad, Position *pos) {
 
     struct QuadNode_ *node = quad->rootNode;
 
-    return lookupQuad(node, pos);
+    QuadPoint * point = lookupQuad(node, pos);
+
+    if (point != NULL) {
+        return point->value;
+    }
+    return NULL;
 }
 
 QuadPoint *lookupQuad(struct QuadNode_ *node, Position *pos) {
@@ -217,7 +235,7 @@ QuadPoint *lookupQuad(struct QuadNode_ *node, Position *pos) {
 
 QuadPoint *lookupNode(struct Node_ *node, Position *pos) {
 
-    for (int i = 0; i < node->stored; i ++) {
+    for (int i = 0; i < node->stored; i++) {
 
         QuadPoint *result = lookupQuad(node->children[i], pos);
 
@@ -234,7 +252,7 @@ QuadPoint *lookupLeaf(struct LeafNode_ *node, Position *pos) {
 
     for (int i = 0; i < node->stored; i++) {
 
-        QuadPoint * point = node->positions[i];
+        QuadPoint *point = node->positions[i];
 
         if (p_comparePositions(point->pos, pos)) {
             return point;
@@ -244,6 +262,82 @@ QuadPoint *lookupLeaf(struct LeafNode_ *node, Position *pos) {
 
     return NULL;
 }
+
+void *qt_delete(QuadTree *quad, Position *pos) {
+
+    QuadPoint *point = deleteQuad(quad->rootNode, pos);
+
+    if (point != NULL) {
+
+        void *value = point->value;
+
+        freeQuadPoint(point);
+
+        return value;
+    }
+
+    return NULL;
+}
+
+QuadPoint *deleteLeaf(struct LeafNode_ *node, Position *pos) {
+
+    int found = 0;
+
+    QuadPoint *point = NULL;
+
+    for (int i = 0; i < node->stored; i++) {
+        if (found) {
+            node->positions[i - 1] = node->positions[i];
+            continue;
+        }
+
+        if (p_comparePositions(pos, node->positions[i]->pos)) {
+
+            found = 1;
+
+            point = node->positions[i];
+
+            node->positions[i] = NULL;
+
+        }
+    }
+
+    return point;
+}
+
+QuadPoint *deleteNode(struct Node_ *node, Position *pos) {
+
+    for (int i = 0; i < node->stored; i++) {
+
+        QuadPoint *point = NULL;
+
+        if ((point = deleteQuad(node->children[i], pos)) != NULL) {
+            return point;
+        }
+
+    }
+
+    return NULL;
+}
+
+QuadPoint *deleteQuad(struct QuadNode_ *node, Position *pos) {
+
+    if (!isContainedInside(pos, node->topLeft, node->bottomRight)) return NULL;
+
+    switch (node->nodeKind) {
+
+        case QT_NODE: {
+            return deleteNode(node->node, pos);
+        }
+
+        case QT_LEAF: {
+            return deleteLeaf(node->leaf, pos);
+        }
+    }
+
+    return NULL;
+}
+
 
 struct QuadNode_ *divideLeafNode(struct QuadNode_ *node) {
 
@@ -296,7 +390,6 @@ void freeQuadNode(struct QuadNode_ *node) {
 
             break;
         }
-
     }
 
     p_free(node->topLeft);

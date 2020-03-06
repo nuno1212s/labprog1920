@@ -1,7 +1,7 @@
 #include "position.h"
 #include <stdlib.h>
 
-Position* initPos(int baseX, int baseY) {
+Position *initPos(int baseX, int baseY) {
 
     Position *pos = malloc(sizeof(Position));
 
@@ -61,8 +61,8 @@ Position *addToWithDirection(Position *pos, Position *pos2, PlacedDirection plac
 
         case P_DOWN: {
 
-            pos->x += p_getBaseX(pos2) * -1;
-            pos->y += p_getBaseY(pos2);
+            pos->x += p_getBaseX(pos2);
+            pos->y += -p_getBaseY(pos2);
 
             break;
         }
@@ -70,7 +70,7 @@ Position *addToWithDirection(Position *pos, Position *pos2, PlacedDirection plac
         case P_LEFT: {
 
             //90º counter clock wise rotation
-            pos->x += p_getBaseY(pos2) * -1;
+            pos->x += -p_getBaseY(pos2);
             pos->y += p_getBaseX(pos2);
 
             break;
@@ -84,6 +84,8 @@ Position *addToWithDirection(Position *pos, Position *pos2, PlacedDirection plac
             break;
         }
 
+        default:
+            break;
     }
 
     return pos;

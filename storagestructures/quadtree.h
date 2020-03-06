@@ -1,7 +1,7 @@
 #ifndef LABPROG_QUADTREE_H
 #define LABPROG_QUADTREE_H
 
-#include "position.h"
+#include "../structures/position.h"
 
 #define MAX_NODES_PER_LEAF 5
 
@@ -59,17 +59,21 @@ typedef struct QuadPoint_ QuadPoint;
 
 typedef struct QuadTree_ QuadTree;
 
+/**
+ * Creates a quadTree with the given topLeft and bottomRight positions
+ *
+ * These positions are cloned so they can be safely deleted afterwards
+ * @return
+ */
 QuadTree *initQuadTree(Position *, Position *);
 
-QuadPoint* initQuadPoint(Position *, void *);
+void *getValue(QuadPoint *);
 
-void insert(QuadTree *, QuadPoint *);
+void qt_insert(QuadTree *, Position *, void *);
 
-QuadPoint* lookup(QuadTree *, Position *);
+void* qt_lookup(QuadTree *, Position *);
 
-QuadPoint* delete(QuadTree *, Position *);
-
-void freeQuadPoint(QuadPoint *);
+void* qt_delete(QuadTree *, Position *);
 
 void freeQuad(QuadTree *);
 
