@@ -3,87 +3,97 @@
 #include <string.h>
 #include <stdio.h>
 
-GamePiece *initGamePiece(int size, char *name) {
+#define MATRIX_THRESHOLD 10
 
-    GamePiece *piece = malloc(sizeof(GamePiece));
+static PossiblePieces *possiblePieces = NULL;
 
-    piece->name = strdup(name);
+PossiblePieces* initPossiblePieces() {
 
-    piece->size = size;
+    possiblePieces = malloc(sizeof(PossiblePieces));
 
-    return piece;
+    possiblePieces->piecesList = ll_initList();
+
+    return possiblePieces;
 }
 
-int g_getPieceSize(GamePiece *p) {
-    return p->size;
-}
+PossiblePieces *getPossiblePieces() {
 
-char *g_getPieceName(GamePiece *p) {
-    return p->name;
-}
+    if (possiblePieces == NULL) {
 
-void g_freePiece(GamePiece *p) {
+        return initPossiblePieces();
 
-    free(p->name);
-
-    free(p);
-}
-
-PlayedGamePiece *initPlayedPiece(GamePiece *gamePiece, Position *position) {
-
-    PlayedGamePiece *piece = malloc(sizeof(PlayedGamePiece));
-
-    piece->pieceType = OWN_PIECE;
-
-    piece->position = position;
-
-    piece->piece = gamePiece;
-
-    return piece;
-}
-
-PlayedGamePiece *initAttemptPiece(int hit, Position *position) {
-
-    PlayedGamePiece *piece = malloc(sizeof(PlayedGamePiece));
-
-    piece->pieceType = PLAYED_PIECE;
-
-    piece->hit = hit;
-
-    piece->position = position;
-
-    return piece;
-}
-
-GamePiece * g_getGamePiece(PlayedGamePiece *p) {
-
-    if (p->pieceType == OWN_PIECE) {
-        return p->piece;
-    } else {
-        fprintf(stderr, "Attempted a g_getGamePiece on a piece that is not your own.");
-        exit(1);
-    }
-}
-
-Position *g_getPlayedPosition(PlayedGamePiece *p) {
-    return p->position;
-}
-
-int g_isHit(PlayedGamePiece *p) {
-
-    if (p->pieceType == PLAYED_PIECE) {
-        return p->hit;
-    } else {
-        fprintf(stderr, "Attempted a g_isHit on a piece that is your own.");
-        exit(1);
     }
 
+    return possiblePieces;
 }
 
-void g_freePlayed(PlayedGamePiece *piece) {
+int getPossiblePiece() {
+    return possiblePieces == NULL ? 0 : ll_size(possiblePieces->piecesList);
+}
 
-    p_free(piece->position);
+void addPossiblePiece(Piece *piece) {
 
-    free(piece);
+    if (possiblePieces == NULL)  {
+        initPossiblePieces();
+    }
 
+    ll_addLast(piece, possiblePieces->piecesList);
+
+}
+
+Game *initGame(int players, int size, Player **player) {
+
+    Game *game = malloc(sizeof(Game));
+
+    game->playerCount = players;
+    game->size = size;
+
+    game->players = player;
+
+    game->currentPlayerIndex = rand() % players;
+
+    return game;
+}
+
+void freeGame(Game *game) {
+
+    for (int i = 0; i < game->playerCount; i++) {
+
+        Player *player = game->players[i];
+
+        freePlayer(player);
+
+    }
+
+    free(game->players);
+
+    free(game);
+}
+
+Player *initPlayer(char*name, int size) {
+
+    Player *player = malloc(sizeof(Player));
+
+    player->name = strdup(name);
+
+    player->storage = initGameStorage(size, size > MATRIX_THRESHOLD ? GS_QUAD : GS_MATRIX);
+
+    return player;
+}
+
+void addPieceChosen(Player *player, Position *position, Piece*piece, PlacedDirection dir) {
+
+    GameStorage *storage = player->storage;
+
+    insertPiece(storage, piece, position, dir);
+
+}
+
+void freePlayer(Player *player) {
+
+    freeGameStorage(player->storage);
+
+    free(player->name);
+
+    free(player);
 }

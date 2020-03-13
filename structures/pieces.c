@@ -9,6 +9,7 @@ PieceInBoard *initPieceInBoard(Piece *piece, Position *pos, PlacedDirection dir)
     board->piece = piece;
     board->direction = dir;
     board->basePos = pos;
+    board->destroyed = 0;
 
     return board;
 }
@@ -23,6 +24,14 @@ Position *gs_getBasePosition(PieceInBoard *piece) {
 
 PlacedDirection gs_getPlacedDir(PieceInBoard *piece) {
     return piece->direction;
+}
+
+void setDestroyed(PieceInBoard *piece) {
+    piece->destroyed = 1;
+}
+
+int isDestroyed(PieceInBoard *piece) {
+    return piece->destroyed;
 }
 
 void gs_freePIB(PieceInBoard *piece) {

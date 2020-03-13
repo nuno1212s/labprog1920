@@ -21,6 +21,8 @@ struct PieceInBoard_ {
 
     PlacedDirection direction;
 
+    int destroyed;
+
 };
 
 typedef struct Piece_ Piece;
@@ -45,6 +47,10 @@ Piece *gs_getPieceType(PieceInBoard *);
 Position *gs_getBasePosition(PieceInBoard *);
 
 PlacedDirection gs_getPlacedDir(PieceInBoard *);
+
+void setDestroyed(PieceInBoard *);
+
+int isDestroyed(PieceInBoard *);
 
 void gs_freePIB(PieceInBoard *);
 

@@ -38,11 +38,25 @@ struct GameStorage_ {
     } data;
 };
 
+struct HitResponse_ {
+
+    enum {
+        HIT_BOAT,
+        HIT_NOTHING,
+        ALREADY_HIT
+    } hit_type;
+
+    PieceInBoard *hit;
+
+};
+
 typedef struct HitPoint_ HitPoint;
 
 typedef struct PointStorage_ PointStorage;
 
 typedef struct GameStorage_ GameStorage;
+
+typedef struct HitResponse_ HitResponse;
 
 /**
  * Hit points
@@ -75,8 +89,14 @@ int insertPiece(GameStorage *, Piece*, Position *, PlacedDirection);
 /**
  * Attempt to play a hit
  *
- * @return != 0 if it hit anything, 0 if not
+ * @return The response of the hit
  */
-int attemptHit(GameStorage *, Position *);
+HitResponse attemptHit(GameStorage *, Position *);
+
+/**
+ * Check if th
+ * @return
+ */
+int hasBeenDestroyed(GameStorage *, PieceInBoard *);
 
 #endif //LABPROG_GAMESTRUCTURES_H
