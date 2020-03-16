@@ -75,6 +75,8 @@ void* qt_lookup(QuadTree *, Position *);
 
 void* qt_delete(QuadTree *, Position *);
 
+void q_iterateAllPoints(QuadTree *, void (*)(void *));
+
 void freeQuad(QuadTree *);
 
 #endif

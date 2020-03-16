@@ -5,21 +5,6 @@
 #include <stdlib.h>
 #include "linkedlist.h"
 
-struct Node_s {
-
-    struct Node_s *next;
-
-    void *data;
-
-};
-
-struct LinkedList_s {
-
-    struct Node_s *first, *last;
-
-    int size;
-
-};
 
 LinkedList *ll_initList() {
 
@@ -148,6 +133,18 @@ void ll_print(LinkedList *list, void(*print)(void*)) {
     while (first != NULL) {
 
         print(first->data);
+
+        first = first->next;
+    }
+
+}
+
+void ll_forEach(LinkedList *list, void (*accept)(void *)) {
+
+    struct Node_s *first = list->first;
+
+    while (first != NULL ){
+        accept(first->data);
 
         first = first->next;
     }

@@ -5,6 +5,7 @@
 #include "../storagestructures/quadtree.h"
 #include "../storagestructures/matrix.h"
 #include "pieces.h"
+#include "../storagestructures/linkedlist.h"
 
 typedef enum {
     GS_MATRIX,
@@ -82,9 +83,11 @@ void freeGameStorage(GameStorage *);
 
 /**
  * Attempt to insert the piece into the game's storage
- * @return != 0 if the piece was successfully inserted, 0 if not
+ * @return The piece in the board object if the piece was successfully inserted, NULL if it wasn't inserted.
  */
-int insertPiece(GameStorage *, Piece*, Position *, PlacedDirection);
+PieceInBoard* insertPiece(GameStorage *, Piece*, Position *, PlacedDirection);
+
+int gs_canPlayPiece(GameStorage *, Piece *, Position *, PlacedDirection);
 
 /**
  * Attempt to play a hit
@@ -98,5 +101,7 @@ HitResponse attemptHit(GameStorage *, Position *);
  * @return
  */
 int hasBeenDestroyed(GameStorage *, PieceInBoard *);
+
+void iterateAllStoredPoints(GameStorage *, void (*)(PointStorage *));
 
 #endif //LABPROG_GAMESTRUCTURES_H

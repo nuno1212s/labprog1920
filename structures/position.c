@@ -16,14 +16,6 @@ Position *clonePos(Position *p) {
     return initPos(p_getBaseX(p), p_getBaseY(p));
 }
 
-int p_getBaseX(Position *p) {
-    return p->x;
-}
-
-int p_getBaseY(Position *p) {
-    return p->y;
-}
-
 int p_comparePositions(Position *p1, Position *p2) {
 
     return p_getBaseX(p1) == p_getBaseX(p2) && p_getBaseY(p1) == p_getBaseY(p2);

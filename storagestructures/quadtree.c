@@ -420,6 +420,47 @@ void disposeOfLeafNode(struct LeafNode_ *leaf) {
 
 }
 
+void iterateAllPointsNode(struct QuadNode_ *node, void (*toCall)(void*));
+
+void iterateAllPointsQtNode(struct Node_ *node, void (*toCall)(void*)) {
+
+    for (int i = 0; i < node->stored; i ++) {
+
+        iterateAllPointsNode(node->children[i], toCall);
+
+    }
+
+}
+
+void iterateAllPointQtLeaf(struct LeafNode_ *leaf, void (*toCall)(void *)) {
+
+    for (int i = 0; i < leaf->stored; i++) {
+
+        toCall(leaf->positions[i]);
+
+    }
+}
+
+void iterateAllPointsNode(struct QuadNode_ *node, void (*toCall)(void*)) {
+
+    switch (node->nodeKind) {
+        case QT_LEAF:
+            iterateAllPointQtLeaf(node->leaf, toCall);
+            break;
+
+        case QT_NODE:
+            iterateAllPointsQtNode(node->node, toCall);
+            break;
+    }
+
+}
+
+void q_iterateAllPoints(QuadTree * tree, void (*toCall)(void*)) {
+
+    iterateAllPointsNode(tree->rootNode, toCall);
+
+}
+
 void freeQuad(QuadTree *qt) {
 
     freeQuadNode(qt->rootNode);

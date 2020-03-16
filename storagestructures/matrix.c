@@ -20,6 +20,12 @@ Matrix *initMatrix(int size) {
 
 void *m_lookup(Matrix *matrix, Position *pos) {
 
+    if (p_getBaseX(pos) < 0 || p_getBaseX(pos) >= matrix->size) {
+        return NULL;
+    } else if (p_getBaseY(pos) < 0 || p_getBaseY(pos) >= matrix->size) {
+        return NULL;
+    }
+
     return matrix->matrixData[p_getBaseX(pos)][p_getBaseY(pos)];
 
 }
@@ -36,6 +42,22 @@ void *m_delete(Matrix *matrix, Position *pos) {
     matrix->matrixData[p_getBaseX(pos)][p_getBaseY(pos)] = NULL;
 
     return result;
+}
+
+void m_iterateAllPoints(Matrix *matrix, void (*toCall) (void *)) {
+
+    for (int x = 0; x < matrix->size; x++) {
+
+        for (int y = 0; y < matrix->size; y++) {
+
+            if (matrix->matrixData[x][y] != NULL) continue;
+
+            toCall(matrix->matrixData[x][y]);
+
+        }
+
+    }
+
 }
 
 void freeMatrix(Matrix *matrix) {

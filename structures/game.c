@@ -45,6 +45,8 @@ Game *initGame(int players, int size, Player **player) {
 
     Game *game = malloc(sizeof(Game));
 
+    game->gameID = rand() % 2000000000;
+
     game->playerCount = players;
     game->size = size;
 
@@ -70,6 +72,24 @@ void freeGame(Game *game) {
     free(game);
 }
 
+SearchingForGame * initSearchGame(PossiblePieces *pieces, int size, Player *player) {
+
+    SearchingForGame *game = malloc(sizeof(SearchingForGame));
+
+    game->size = size;
+
+    game->pieces = pieces;
+    game->player = player;
+
+    return game;
+}
+
+void deleteSearchGame(SearchingForGame *game) {
+
+    free(game);
+
+}
+
 Player *initPlayer(char*name, int size) {
 
     Player *player = malloc(sizeof(Player));
@@ -85,8 +105,60 @@ void addPieceChosen(Player *player, Position *position, Piece*piece, PlacedDirec
 
     GameStorage *storage = player->storage;
 
-    insertPiece(storage, piece, position, dir);
+    PieceInBoard *board = insertPiece(storage, piece, position, dir);
 
+    if (board == NULL) {
+        ll_addLast(board, player->currentActivePieces);
+    }
+
+}
+
+int canPlacePiece(Player *player, Position *pos, Piece*piece, PlacedDirection dir) {
+
+    GameStorage *storage = player->storage;
+
+    return gs_canPlayPiece(storage, piece, pos, dir);
+}
+
+int getRand(int size) {
+
+    return rand() % size;
+
+}
+
+SearchingForGame *initGameForPlayer(Player *player, int size) {
+
+    return initSearchGame(getPossiblePieces(), size, player);
+
+}
+
+SearchingForGame * randomizePieces(Player *player, int size) {
+
+    GameStorage *storage = player->storage;
+
+    PossiblePieces * pieces = getPossiblePieces();
+
+    struct Node_s * first = pieces->piecesList->first;
+
+    while (first != NULL) {
+
+        Piece * piece = (Piece *) first->data;
+
+        int x = getRand(size), y = getRand(size);
+
+        PlacedDirection dir = getRand(4);
+
+        Position pos = {x, y};
+
+        if (insertPiece(storage, piece, &pos, dir) == NULL) {
+            //Retry a different position
+            continue;
+        }
+
+        first = first->next;
+    }
+
+    return initSearchGame(pieces, size, player);
 }
 
 void freePlayer(Player *player) {

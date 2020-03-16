@@ -5,6 +5,10 @@
 #include "gamestructures.h"
 #include "../storagestructures/linkedlist.h"
 
+#define g_gameID(g) (g->gameID)
+#define g_gameSize(g) (g->size)
+#define g_currentPlayer(g) (g->currentPlayerIndex)
+
 struct PossiblePieces_ {
 
     LinkedList* piecesList;
@@ -23,6 +27,8 @@ struct SearchingForGame_ {
 
 struct Game_ {
 
+    int gameID;
+
     int playerCount;
 
     int size;
@@ -38,6 +44,8 @@ struct Player_ {
     char *name;
 
     GameStorage *storage;
+
+    LinkedList *currentActivePieces;
 
 };
 
@@ -57,11 +65,15 @@ Player* initPlayer(char *name, int size);
 
 void addPieceChosen(Player *, Position *, Piece*, PlacedDirection);
 
-void randomizePieces(Player *);
+int canPlacePiece(Player *, Position *, Piece*, PlacedDirection);
+
+SearchingForGame *randomizePieces(Player *, int size);
+
+SearchingForGame *initGameForPlayer(Player *, int size);
 
 void freePlayer(Player *);
 
-SearchingForGame *initSearchGame(PossiblePieces *, Player *);
+SearchingForGame *initSearchGame(PossiblePieces *, int, Player *);
 
 /**
  * Deleting the Search game does not delete the player objects

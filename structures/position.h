@@ -1,6 +1,9 @@
 #ifndef LABPROG_POSITION_H
 #define LABPROG_POSITION_H
 
+#define p_getBaseX(p) (p->x)
+#define p_getBaseY(p) (p->y)
+
 typedef enum {
     P_UP,
     P_DOWN,
@@ -19,10 +22,6 @@ typedef struct Position_ Position;
 Position *initPos(int, int);
 
 Position *clonePos(Position *);
-
-int p_getBaseX(Position *);
-
-int p_getBaseY(Position *);
 
 /**
  * Compares two positions

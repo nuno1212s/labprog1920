@@ -14,6 +14,14 @@ PointStorage *initPS(HitPoint *point, PieceInBoard *board) {
 
 void freePS(PointStorage *ps) {
 
+    if (ps->hitPoint != NULL) {
+        gs_freeHP(ps->hitPoint);
+    }
+
+    if (ps->piece != NULL) {
+        gs_freePIB(ps->piece);
+    }
+
     free(ps);
 
 }
@@ -71,6 +79,9 @@ GameStorage *initGameStorage(int size, GameStorageType type) {
 
 void freeGameStorage(GameStorage *gs) {
 
+    //Release all the stored points
+    iterateAllStoredPoints(gs, &freePS);
+
     switch (gs->type) {
 
         case GS_QUAD: {
@@ -113,68 +124,124 @@ void freePositions(Position **pos, int size) {
     free(pos);
 }
 
-int insertPieceQuad(QuadTree *qt, Piece *piece, Position *basePos, PlacedDirection dir) {
+Position **canPlace1BlockClearance(Piece *piece, Position *basePos, PlacedDirection dir, void *storage,
+                                   void *(*toCall)(void *, Position *)) {
 
-    Position **pos = calculateNewPositions(piece, basePos, dir);
+    Position **newPos = calculateNewPositions(piece, basePos, dir);
 
-    for (int i = 0; i < piece->size; i++) {
+    for (int i = 0; piece->size; i++) {
 
-        void *point = qt_lookup(qt, pos[i]);
+        Position *pos = newPos[i];
 
-        if (point == NULL) continue;
+        for (int x = -1; x <= 1; x++) {
+            for (int y = -1; y <= 1; y++) {
 
-        PointStorage *storage = (PointStorage *) point;
+                Position p = {p_getBaseX(pos) + x, p_getBaseY(pos) + y};
 
-        /*
-         * There is already a piece stored in the positions that are occupied by this new piece
-         */
-        if (storage->piece == NULL) continue;
+                PointStorage *canPlace = (PointStorage *) toCall(storage, &p);
+
+                if (canPlace != NULL && canPlace->piece != NULL) {
+
+                    freePositions(newPos, piece->size);
+
+                    return NULL;
+                }
+
+            }
+        }
+    }
+
+    return newPos;
+}
+
+int gs_canPlayPiece(GameStorage *storage, Piece *piece, Position *pos, PlacedDirection dir) {
+
+    void *(*toLookFunc)(void *, Position *);
+
+    void *storageObj;
+
+    switch (storage->type) {
+
+        case GS_MATRIX: {
+            toLookFunc = (void *(*)(void *, Position *)) m_lookup;
+
+            storageObj = storage->data.matrix;
+
+            break;
+        }
+
+        case GS_QUAD: {
+            toLookFunc = (void *(*) (void *, Position *)) qt_lookup;
+
+            storageObj = storage->data.quadTree;
+
+            break;
+        }
+
+        default:
+            return 0;
+
+    }
+
+    Position **positions = canPlace1BlockClearance(piece, pos, dir, storageObj, toLookFunc);
+
+    if (positions != NULL) {
+        freePositions(positions, piece->size);
+
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+PieceInBoard *insertPieceQuad(QuadTree *qt, Piece *piece, Position *basePos, PlacedDirection dir) {
+
+    void *(*toLookFunc)(void *, Position *) = (void *(*)(void *, Position *)) qt_lookup;
+
+    Position **pos;
+
+    if ((pos = canPlace1BlockClearance(piece, basePos, dir, qt, toLookFunc)) != NULL) {
+        PieceInBoard *board = initPieceInBoard(piece, basePos, dir);
+
+        for (int i = 0; i < piece->size; i++) {
+            PointStorage *ps = initPS(NULL, board);
+
+            qt_insert(qt, pos[i], ps);
+        }
 
         freePositions(pos, piece->size);
 
-        return 0;
+        return board;
     }
 
-    PieceInBoard *board = initPieceInBoard(piece, basePos, dir);
-
-    for (int i = 0; i < piece->size; i++) {
-        PointStorage *ps = initPS(NULL, board);
-
-        qt_insert(qt, pos[i], ps);
-    }
-
-    return 1;
+    return NULL;
 }
 
-int insertPieceMatrix(Matrix *matrix, Piece *piece, Position *basePos, PlacedDirection dir) {
-    Position **pos = calculateNewPositions(piece, basePos, dir);
+PieceInBoard *insertPieceMatrix(Matrix *matrix, Piece *piece, Position *basePos, PlacedDirection dir) {
+    void *(*lookUpFunc)(void *, Position *) = (void *(*)(void *, Position *)) &m_lookup;
 
-    for (int i = 0; i < piece->size; i++) {
-        void *point = m_lookup(matrix, pos[i]);
+    Position **positions;
 
-        if (point == NULL) continue;
+    if ((positions = canPlace1BlockClearance(piece, basePos, dir, matrix, lookUpFunc)) != NULL) {
+        PieceInBoard *board = initPieceInBoard(piece, basePos, dir);
 
-        PointStorage *storage = (PointStorage *) point;
+        for (int i = 0; i < piece->size; i++) {
 
-        if (storage->piece == NULL) continue;
+            PointStorage *ps = initPS(NULL, board);
 
-        freePositions(pos, piece->size);
+            m_insert(matrix, positions[i], ps);
+        }
 
-        return 0;
+        freePositions(positions, piece->size);
+
+        return board;
+
     }
 
-    PieceInBoard *board = initPieceInBoard(piece, basePos, dir);
-
-    for (int i = 0; i < piece->size; i++) {
-        PointStorage *ps = initPS(NULL, board);
-
-        m_insert(matrix, pos[i], ps);
-    }
-
-    return 1;
+    return NULL;
 }
 
-int insertPiece(GameStorage *gs, Piece *piece, Position *basePos, PlacedDirection dir) {
+PieceInBoard *insertPiece(GameStorage *gs, Piece *piece, Position *basePos, PlacedDirection dir) {
 
     switch (gs->type) {
 
@@ -188,7 +255,7 @@ int insertPiece(GameStorage *gs, Piece *piece, Position *basePos, PlacedDirectio
 
     }
 
-    return 0;
+    return NULL;
 }
 
 HitResponse hitNothing() {
@@ -323,7 +390,7 @@ int hasBeenDestroyedMatrix(Matrix *matrix, PieceInBoard *board) {
 
     Piece *piece = board->piece;
 
-    for (int i = 0; i < piece->size; i ++) {
+    for (int i = 0; i < piece->size; i++) {
 
         Position *p = piece->positions[i];
 
@@ -360,7 +427,7 @@ int hasBeenDestroyed(GameStorage *storage, PieceInBoard *board) {
             destroyed = hasBeenDestroyedMatrix(storage->data.matrix, board);
             break;
         case GS_QUAD:
-            destroyed =  hasBeenDestroyedQuad(storage->data.quadTree, board);
+            destroyed = hasBeenDestroyedQuad(storage->data.quadTree, board);
             break;
     }
 
@@ -369,4 +436,20 @@ int hasBeenDestroyed(GameStorage *storage, PieceInBoard *board) {
     }
 
     return destroyed;
+}
+
+void iterateAllStoredPoints(GameStorage *storage, void (*toCall)(PointStorage *)) {
+
+    void (*toCallCasted)(void *) = (void (*)(void *)) toCall;
+
+    switch (storage->type) {
+
+        case GS_QUAD:
+            q_iterateAllPoints(storage->data.quadTree, toCallCasted);
+            break;
+        case GS_MATRIX:
+            m_iterateAllPoints(storage->data.matrix, toCallCasted);
+            break;
+    }
+
 }

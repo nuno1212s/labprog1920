@@ -90,6 +90,12 @@
 		<Unit filename="/home/nuno/CLionProjects/labprog1920/graphics/graphics.h">
 			<Option target="LabProg"/>
 		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/labprog1920/graphics/shell.c">
+			<Option target="LabProg"/>
+		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/labprog1920/graphics/shell.h">
+			<Option target="LabProg"/>
+		</Unit>
 		<Unit filename="/home/nuno/CLionProjects/labprog1920/main.c">
 			<Option target="LabProg"/>
 		</Unit>
