@@ -99,6 +99,12 @@
 		<Unit filename="/home/nuno/CLionProjects/labprog1920/main.c">
 			<Option target="LabProg"/>
 		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/labprog1920/storagestructures/bitmap.c">
+			<Option target="LabProg"/>
+		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/labprog1920/storagestructures/bitmap.h">
+			<Option target="LabProg"/>
+		</Unit>
 		<Unit filename="/home/nuno/CLionProjects/labprog1920/storagestructures/linkedlist.c">
 			<Option target="LabProg"/>
 		</Unit>

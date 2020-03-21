@@ -42,16 +42,36 @@ typedef struct PieceInBoard_ PieceInBoard;
  */
 PieceInBoard *initPieceInBoard(Piece *, Position *, PlacedDirection);
 
+/**
+ * Get the piece structure that supports this placed piece
+ * @return
+ */
 Piece *gs_getPieceType(PieceInBoard *);
 
 Position *gs_getBasePosition(PieceInBoard *);
 
+/**
+ * Get the direction that the placed piece is in
+ * @return
+ */
 PlacedDirection gs_getPlacedDir(PieceInBoard *);
 
-void setDestroyed(PieceInBoard *);
+/**
+ * Increment the amount of spots that have been destroyed in this piece
+ */
+void incrementDestroyed(PieceInBoard *);
 
+/**
+ * Check if the piece is destroyed
+ * @return
+ */
 int isDestroyed(PieceInBoard *);
 
+/**
+ * Free a piece that has been placed
+ *
+ * This does not free the underlying piece obj
+ */
 void gs_freePIB(PieceInBoard *);
 
 /**
@@ -68,10 +88,17 @@ void gs_freePIB(PieceInBoard *);
  */
 Piece *initPiece(int, char *, Position **);
 
+/**
+ * Get the name of a piece
+ * @return
+ */
 char *getName(Piece *);
 
 Position **getPositions(Piece *);
 
+/**
+ * Free the piece object
+ */
 void gs_freePiece(Piece *);
 
 #endif

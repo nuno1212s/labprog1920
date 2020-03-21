@@ -1,6 +1,3 @@
-//
-// Created by nuno on 16/03/20.
-//
 
 #include "shell.h"
 #include "../structures/game.h"

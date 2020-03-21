@@ -2,20 +2,21 @@
 #include <stdlib.h>
 #include <string.h>
 
-PointStorage *initPS(HitPoint *point, PieceInBoard *board) {
+PointStorage *initPS(HitPoint *point, PieceInBoard *board, HitPoint *ownHitPoint) {
 
     PointStorage *ps = malloc(sizeof(PointStorage));
 
     ps->piece = board;
-    ps->hitPoint = point;
+    ps->opponentHitPoint = point;
+    ps->ownHitPoint = ownHitPoint;
 
     return ps;
 }
 
 void freePS(PointStorage *ps) {
 
-    if (ps->hitPoint != NULL) {
-        gs_freeHP(ps->hitPoint);
+    if (ps->opponentHitPoint != NULL) {
+        gs_freeHP(ps->opponentHitPoint);
     }
 
     if (ps->piece != NULL) {
@@ -171,7 +172,7 @@ int gs_canPlayPiece(GameStorage *storage, Piece *piece, Position *pos, PlacedDir
         }
 
         case GS_QUAD: {
-            toLookFunc = (void *(*) (void *, Position *)) qt_lookup;
+            toLookFunc = (void *(*)(void *, Position *)) qt_lookup;
 
             storageObj = storage->data.quadTree;
 
@@ -204,7 +205,7 @@ PieceInBoard *insertPieceQuad(QuadTree *qt, Piece *piece, Position *basePos, Pla
         PieceInBoard *board = initPieceInBoard(piece, basePos, dir);
 
         for (int i = 0; i < piece->size; i++) {
-            PointStorage *ps = initPS(NULL, board);
+            PointStorage *ps = initPS(NULL, board, NULL);
 
             qt_insert(qt, pos[i], ps);
         }
@@ -227,7 +228,7 @@ PieceInBoard *insertPieceMatrix(Matrix *matrix, Piece *piece, Position *basePos,
 
         for (int i = 0; i < piece->size; i++) {
 
-            PointStorage *ps = initPS(NULL, board);
+            PointStorage *ps = initPS(NULL, board, NULL);
 
             m_insert(matrix, positions[i], ps);
         }
@@ -289,14 +290,14 @@ HitResponse attemptHitQuad(QuadTree *tree, Position *toHit) {
 
     if (point == NULL) {
 
-        PointStorage *storage = initPS(initHitPoint(toHit, 0), NULL);
+        PointStorage *storage = initPS(initHitPoint(toHit, 0), NULL, NULL);
 
         qt_insert(tree, toHit, storage);
 
         return hitNothing();
     }
 
-    if (point->hitPoint != NULL) {
+    if (point->opponentHitPoint != NULL) {
 
         return alreadyHit();
 
@@ -308,7 +309,7 @@ HitResponse attemptHitQuad(QuadTree *tree, Position *toHit) {
         isHit = 1;
     }
 
-    point->hitPoint = initHitPoint(toHit, isHit);
+    point->opponentHitPoint = initHitPoint(toHit, isHit);
 
     return hitBoat(point->piece);
 }
@@ -319,12 +320,12 @@ HitResponse attemptHitMatrix(Matrix *matrix, Position *toHit) {
 
     if (point == NULL) {
 
-        m_insert(matrix, toHit, initPS(initHitPoint(toHit, 0), NULL));
+        m_insert(matrix, toHit, initPS(initHitPoint(toHit, 0), NULL, NULL));
 
         return hitNothing();
     }
 
-    if (point->hitPoint != NULL) {
+    if (point->opponentHitPoint != NULL) {
         return alreadyHit();
     }
 
@@ -334,7 +335,7 @@ HitResponse attemptHitMatrix(Matrix *matrix, Position *toHit) {
         isHit = 1;
     }
 
-    point->hitPoint = initHitPoint(toHit, isHit);
+    point->opponentHitPoint = initHitPoint(toHit, isHit);
 
     return hitBoat(point->piece);
 }
@@ -353,89 +354,102 @@ HitResponse attemptHit(GameStorage *storage, Position *toHit) {
     }
 
     if (s.hit_type == HIT_BOAT) {
-        hasBeenDestroyed(storage, s.hit);
+        incrementDestroyed(s.hit);
     }
 
     return s;
 }
 
-int hasBeenDestroyedQuad(QuadTree *quad, PieceInBoard *board) {
+void registerHitMatrix(Matrix *matrix, Position *pos, int result) {
 
-    Piece *piece = board->piece;
+    void *position = m_lookup(matrix, pos);
 
-    for (int i = 0; i < piece->size; i++) {
+    HitPoint *ourHitPoint = initHitPoint(pos, result);
 
-        Position *p = piece->positions[i];
+    if (position == NULL) {
+        position = initPS(NULL, NULL, ourHitPoint);
 
-        Position cP = {p_getBaseX(p), p_getBaseY(p)};
+        m_insert(matrix, pos, position);
+    } else {
 
-        addToWithDirection(&cP, board->basePos, board->direction);
+        PointStorage *ps = (PointStorage *) position;
 
-        PointStorage *storage = qt_lookup(quad, &cP);
-
-        if (storage == NULL) {
-            return 0;
-        }
-
-        if (storage->hitPoint == NULL) {
-            return 0;
-        }
+        ps->ownHitPoint = ourHitPoint;
     }
-
-    return 1;
 
 }
 
-int hasBeenDestroyedMatrix(Matrix *matrix, PieceInBoard *board) {
+void registerHitQuad(QuadTree *tree, Position *pos, int result) {
 
-    Piece *piece = board->piece;
+    void *position = qt_lookup(tree, pos);
 
-    for (int i = 0; i < piece->size; i++) {
+    HitPoint *ourHitPoint = initHitPoint(pos, result);
 
-        Position *p = piece->positions[i];
+    if (position == NULL) {
+        position = initPS(NULL, NULL, ourHitPoint);
 
-        Position cP = {p_getBaseX(p), p_getBaseY(p)};
+        qt_insert(tree, pos, position);
+    } else {
 
-        addToWithDirection(&cP, board->basePos, board->direction);
+        PointStorage *ps = (PointStorage *) position;
 
-        PointStorage *storage = m_lookup(matrix, &cP);
-
-        if (storage == NULL) {
-            return 0;
-        }
-
-        if (storage->hitPoint == NULL) {
-            return 0;
-        }
-
+        ps->ownHitPoint = ourHitPoint;
     }
-
-    return 1;
 }
 
-int hasBeenDestroyed(GameStorage *storage, PieceInBoard *board) {
-
-    if (isDestroyed(board)) {
-        return 1;
-    }
-
-    int destroyed = 0;
+void registerHit(GameStorage *storage, Position *pos, int result) {
 
     switch (storage->type) {
 
         case GS_MATRIX:
-            destroyed = hasBeenDestroyedMatrix(storage->data.matrix, board);
+            registerHitMatrix(storage->data.matrix, pos, result);
             break;
+
         case GS_QUAD:
-            destroyed = hasBeenDestroyedQuad(storage->data.quadTree, board);
+            registerHitQuad(storage->data.quadTree, pos, result);
             break;
     }
 
-    if (destroyed) {
-        setDestroyed(board);
+}
+
+int hasPlayedGeneric(void *storage, Position *pos, void *(*toLook)(void *, Position *)) {
+
+    void *result = toLook(storage, pos);
+
+    if (result == NULL) {
+        return 0;
+    } else if (((PointStorage *) result)->ownHitPoint == NULL) {
+        return 0;
     }
 
-    return destroyed;
+    return 1;
+}
+
+int hasPlayed(GameStorage *storage, Position *pos) {
+
+    void * (*toLook)(void*, Position *) = NULL;
+
+    void *actualStorage = NULL;
+
+    switch (storage->type) {
+        case GS_QUAD:
+            toLook = (void*(*)(void*, Position *)) qt_lookup;
+
+            actualStorage = storage->data.quadTree;
+            break;
+        case GS_MATRIX:
+            toLook = (void*(*)(void *, Position *)) m_lookup;
+
+            actualStorage = storage->data.matrix;
+            break;
+    }
+
+    return hasPlayedGeneric(actualStorage, pos, toLook);
+
+}
+
+int hasBeenDestroyed(GameStorage *storage, PieceInBoard *board) {
+    return isDestroyed(board);
 }
 
 void iterateAllStoredPoints(GameStorage *storage, void (*toCall)(PointStorage *)) {

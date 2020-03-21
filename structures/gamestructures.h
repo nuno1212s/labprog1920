@@ -16,7 +16,7 @@ struct PointStorage_ {
 
     struct PieceInBoard_ *piece;
 
-    struct HitPoint_ *hitPoint;
+    struct HitPoint_ *opponentHitPoint, *ownHitPoint;
 
 };
 
@@ -90,14 +90,27 @@ PieceInBoard* insertPiece(GameStorage *, Piece*, Position *, PlacedDirection);
 int gs_canPlayPiece(GameStorage *, Piece *, Position *, PlacedDirection);
 
 /**
- * Attempt to play a hit
+ * Attempt to play a hit by the adversary
  *
  * @return The response of the hit
  */
 HitResponse attemptHit(GameStorage *, Position *);
 
 /**
- * Check if th
+ * Check if we have played in a specific position
+ * @return
+ */
+int hasPlayed(GameStorage *, Position *);
+
+/**
+ * Register our own play
+ *
+ * @param result
+ */
+void registerHit(GameStorage *, Position *, int result);
+
+/**
+ * Check if a piece has already been destroyed
  * @return
  */
 int hasBeenDestroyed(GameStorage *, PieceInBoard *);

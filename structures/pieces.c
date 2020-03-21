@@ -26,12 +26,12 @@ PlacedDirection gs_getPlacedDir(PieceInBoard *piece) {
     return piece->direction;
 }
 
-void setDestroyed(PieceInBoard *piece) {
-    piece->destroyed = 1;
+void incrementDestroyed(PieceInBoard *piece) {
+    piece->destroyed++;
 }
 
 int isDestroyed(PieceInBoard *piece) {
-    return piece->destroyed;
+    return piece->destroyed == piece->piece->size;
 }
 
 void gs_freePIB(PieceInBoard *piece) {

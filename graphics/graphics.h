@@ -1,7 +1,3 @@
-//
-// Created by nuno on 13/03/20.
-//
-
 #ifndef LABPROG_GRAPHICS_H
 #define LABPROG_GRAPHICS_H
 

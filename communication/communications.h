@@ -1,7 +1,3 @@
-//
-// Created by nuno on 13/03/20.
-//
-
 #ifndef LABPROG_COMMUNICATIONS_H
 #define LABPROG_COMMUNICATIONS_H
 

@@ -1,6 +1,3 @@
-//
-// Created by nuno on 16/03/20.
-//
 
 #ifndef LABPROG_SHELL_H
 #define LABPROG_SHELL_H
