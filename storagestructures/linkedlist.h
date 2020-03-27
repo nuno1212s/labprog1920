@@ -27,6 +27,8 @@ void *ll_poll(LinkedList *);
 
 void *ll_peekLast(LinkedList *);
 
+void* ll_get(LinkedList *, int);
+
 int ll_size(LinkedList *);
 
 void ll_enqueue(void *, LinkedList *);

@@ -2,12 +2,13 @@
 #define LABPROG_PIECES_H
 
 #include "position.h"
+#include "../storagestructures/bitmap.h"
 
 struct Piece_ {
 
     int size;
 
-    Position **positions;
+    BitMatrix *matrix;
 
     char *name;
 
@@ -86,7 +87,7 @@ void gs_freePIB(PieceInBoard *);
  * The name and array of positions are cloned and therefore can be called with
  * Local variables.
  */
-Piece *initPiece(int, char *, Position **);
+Piece *initPiece(int, char *, BitMatrix *matrix);
 
 /**
  * Get the name of a piece
@@ -94,7 +95,11 @@ Piece *initPiece(int, char *, Position **);
  */
 char *getName(Piece *);
 
-Position **getPositions(Piece *);
+/**
+ * Get the positions associated with a piece
+ * @return
+ */
+BitMatrix *getPositions(Piece *);
 
 /**
  * Free the piece object

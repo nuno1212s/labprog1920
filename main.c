@@ -2,10 +2,12 @@
 
 #include "graphics/graphics.h"
 
+#include "storagestructures/bitmap.h"
+
 int main() {
     printf("Hello, World!\n");
 
-    displayMenu();
+//    displayMenu();
 
     return 0;
 }

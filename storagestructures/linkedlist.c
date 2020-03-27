@@ -25,11 +25,31 @@ void *ll_peek(LinkedList *list) {
 
 void *ll_peekLast(LinkedList *list) {
 
-    if (list->last == NULL ){
+    if (list->last == NULL) {
         return NULL;
     }
 
     return list->last->data;
+}
+
+void *ll_get(LinkedList *list, int pos) {
+
+    if (pos >= list->size || pos < 0) {
+        return NULL;
+    }
+
+    int current = 0;
+
+    struct Node_s *first = list->first;
+
+    while (current != pos) {
+
+        current++;
+
+        first = first->next;
+    }
+
+    return first;
 }
 
 int ll_size(LinkedList *list) {
@@ -122,7 +142,7 @@ void ll_clear(LinkedList *list) {
     list->last = NULL;
 }
 
-void ll_print(LinkedList *list, void(*print)(void*)) {
+void ll_print(LinkedList *list, void(*print)(void *)) {
 
     struct Node_s *first = list->first;
 
@@ -139,7 +159,7 @@ void ll_forEach(LinkedList *list, void (*accept)(void *)) {
 
     struct Node_s *first = list->first;
 
-    while (first != NULL ){
+    while (first != NULL) {
         accept(first->data);
 
         first = first->next;

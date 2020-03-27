@@ -42,34 +42,31 @@ void gs_freePIB(PieceInBoard *piece) {
 
 }
 
-Piece *initPiece(int size, char *name, Position **positions) {
+Piece *initPiece(int size, char *name, BitMatrix *positions) {
 
     Piece *piece = malloc(sizeof(Piece));
 
     piece->name = strdup(name);
     piece->size = size;
-    piece->positions = malloc(sizeof(Position *) * size);
-
-    for (int i = 0; i < size; i++) {
-
-        piece->positions[i] = clonePos(positions[i]);
-
-    }
+    piece->matrix = positions;
 
     return piece;
 
 }
 
-void freePiece(Piece *piece) {
+BitMatrix *getPositions(Piece *piece) {
+    return piece->matrix;
+}
+
+char *getName(Piece *piece) {
+    return piece->name;
+}
+
+void gs_freePiece(Piece *piece) {
 
     free(piece->name);
 
-    for (int i = 0; i < piece->size; i++) {
-        p_free(piece->positions[i]);
-    }
-
-
-    free(piece->positions);
+    freeBitMatrix(piece->matrix);
 
     free(piece);
 }

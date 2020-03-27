@@ -31,8 +31,22 @@ int p_comparePositions(Position *, Position *);
 
 Position *addTo(Position *, Position *);
 
+/**
+ * Add the given coordinates to the position
+ *
+ * @param x
+ * @param y
+ * @return
+ */
 Position *addToCoords(Position *, int x, int y);
 
+/**
+ * Add the second position to the first position, with the given direction.
+ *
+ * The first position is modified and returned
+ *
+ * @return
+ */
 Position *addToWithDirection(Position *, Position *, PlacedDirection);
 
 void p_free(Position *);

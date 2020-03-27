@@ -83,11 +83,23 @@ void freeGameStorage(GameStorage *);
 
 /**
  * Attempt to insert the piece into the game's storage
+ *
+ * The position is not copied.
+ *
  * @return The piece in the board object if the piece was successfully inserted, NULL if it wasn't inserted.
  */
 PieceInBoard* insertPiece(GameStorage *, Piece*, Position *, PlacedDirection);
 
+/**
+ * Check if the player can place the piece in the given position
+ * @return
+ */
 int gs_canPlayPiece(GameStorage *, Piece *, Position *, PlacedDirection);
+
+/**
+ * Remove a placed piece from the player's game
+ */
+void removePlacedPiece(GameStorage *, PieceInBoard *);
 
 /**
  * Attempt to play a hit by the adversary

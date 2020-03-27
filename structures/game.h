@@ -61,6 +61,13 @@ Game* initGame(int, int, Player**);
 
 void freeGame(Game *);
 
+/**
+ * Creates a player object
+ *
+ * @param name The name of the player. This parameter is duplicated, so it can be safely freed afterwards
+ * @param size The size of the game tray
+ * @return
+ */
 Player* initPlayer(char *name, int size);
 
 void addPieceChosen(Player *, Position *, Piece*, PlacedDirection);

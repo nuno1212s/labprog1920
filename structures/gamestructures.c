@@ -107,10 +107,18 @@ Position **calculateNewPositions(Piece *piece, Position *base, PlacedDirection d
 
     Position **newPositions = malloc(sizeof(Position *) * piece->size);
 
-    for (int i = 0; i < piece->size; i++) {
+    int pos = 0;
 
-        newPositions[i] = addToWithDirection(clonePos(base), piece->positions[i], dir);
+    for (int x = 0; x < matrix_rows(piece->matrix); x++) {
 
+        for (int y = 0; y < matrix_cols(piece->matrix); y++) {
+
+            if (m_getBit(piece->matrix, x, y)) {
+
+                newPositions[pos++] = addToWithDirection(initPos(x, y), base, dir);
+
+            }
+        }
     }
 
     return newPositions;
@@ -257,6 +265,57 @@ PieceInBoard *insertPiece(GameStorage *gs, Piece *piece, Position *basePos, Plac
     }
 
     return NULL;
+}
+
+void removePlayedPieceMatrix(Matrix *matrix, PieceInBoard *board) {
+
+    Position **pos = calculateNewPositions(board->piece, board->basePos, board->direction);
+
+    for (int i = 0; i < board->piece->size;i ++) {
+
+        void *result = m_lookup(matrix, pos[i]);
+
+        if (result == NULL) {
+            continue;
+        }
+
+        PointStorage *p = (PointStorage *) result;
+
+        freePS(p);
+
+        m_delete(matrix, pos[i]);
+    }
+
+}
+
+void removePlayedPieceQuad(QuadTree* qt, PieceInBoard *piece) {
+
+    Position **pos = calculateNewPositions(piece->piece, piece->basePos, piece->direction);
+
+    for (int i = 0; i < piece->piece->size; i++) {
+
+        void *result = qt_lookup(qt, pos[i]);
+
+        if (result == NULL) continue;
+
+        freePS(result);
+        //We can just delete the point because to remove played pieces, we know that the game has not started yet and no player has played yet
+        qt_delete(qt, pos[i]);
+    }
+
+}
+
+void removePlayedPiece(GameStorage *gs, PieceInBoard *board) {
+
+    switch (gs->type) {
+        case GS_MATRIX:
+            removePlayedPieceMatrix(gs->data.matrix, board);
+            return;
+        case GS_QUAD:
+            removePlayedPieceQuad(gs->data.quadTree, board);
+            return;
+    }
+
 }
 
 HitResponse hitNothing() {
