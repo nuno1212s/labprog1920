@@ -10,7 +10,7 @@ typedef enum {
 
 void initGraphics(GRAPHICS);
 
-void displayMenu();
+Game* displayMenu();
 
 void displayGame();
 

@@ -84,7 +84,7 @@ void gs_freePIB(PieceInBoard *);
  *
  * Takes the size, name and array of positions
  *
- * The name and array of positions are cloned and therefore can be called with
+ * The name is cloned and therefore can be called with
  * Local variables.
  */
 Piece *initPiece(int, char *, BitMatrix *matrix);

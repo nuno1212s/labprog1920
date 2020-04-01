@@ -7,7 +7,7 @@
 int main() {
     printf("Hello, World!\n");
 
-//    displayMenu();
+    Game* currentGame = displayMenu();
 
     return 0;
 }

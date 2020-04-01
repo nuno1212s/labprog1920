@@ -12,15 +12,14 @@ GRAPHICS getGraphics() {
     return graphicsType;
 }
 
-void displayMenu() {
+Game* displayMenu() {
 
     switch (getGraphics()) {
 
         case SHELL: {
 
-            sg_displayMenu();
+            return sg_displayMenu();
 
-            break;
         }
 
     }

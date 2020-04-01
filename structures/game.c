@@ -2,12 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include "../storagestructures/bitmap.h"
 
 #define MATRIX_THRESHOLD 10
 
 static PossiblePieces *possiblePieces = NULL;
 
-PossiblePieces* initPossiblePieces() {
+PossiblePieces *initPossiblePieces() {
 
     possiblePieces = malloc(sizeof(PossiblePieces));
 
@@ -16,15 +17,66 @@ PossiblePieces* initPossiblePieces() {
     return possiblePieces;
 }
 
+void createDefaultPossiblePieces();
+
 PossiblePieces *getPossiblePieces() {
 
     if (possiblePieces == NULL) {
+        initPossiblePieces();
 
-        return initPossiblePieces();
+        createDefaultPossiblePieces();
+
+        return possiblePieces;
 
     }
 
     return possiblePieces;
+}
+
+void createDefaultPossiblePieces() {
+
+    BitMatrix *matrix = createBitMatrix(5, 5, 1);
+
+    m_setBit(matrix, 0, 0, 1);
+
+    addPossiblePiece( initPiece(1, "One block wonder", matrix));
+
+    BitMatrix *twoBlock = createBitMatrix(5, 5, 1);
+
+    m_setBit(twoBlock, 0, 0, 1);
+    m_setBit(twoBlock, 1, 0, 1);
+
+    addPossiblePiece(initPiece(2, "Two block machine", twoBlock));
+
+    BitMatrix *threeBlock = createBitMatrix(5, 5, 1);
+
+    m_setBit(threeBlock, 0, 0, 1);
+    m_setBit(threeBlock, 1, 0, 1);
+    m_setBit(threeBlock, 2, 0, 1);
+
+    addPossiblePiece(initPiece(3, "Three block thingy", threeBlock));
+
+    BitMatrix *destroyer = createBitMatrix(5, 5, 1);
+
+    m_setBit(destroyer, 0, 0, 1);
+    m_setBit(destroyer, 1, 0, 1);
+    m_setBit(destroyer, 2, 0, 1);
+    m_setBit(destroyer, 3, 0, 1);
+
+    addPossiblePiece(initPiece(4, "Destroyer", destroyer));
+
+    BitMatrix *lThing = createBitMatrix(5, 5, 1);
+
+    m_setBit(lThing, 0, 0, 1);
+    m_setBit(lThing, 1, 0, 1);
+    m_setBit(lThing, 2, 0, 1);
+    m_setBit(lThing, 3, 0, 1);
+    m_setBit(lThing, 0, 1, 1);
+    m_setBit(lThing, 0, 2, 1);
+
+    addPossiblePiece(initPiece(6, "L Remover", lThing));
+
+
 }
 
 int getPossiblePiece() {
@@ -33,11 +85,7 @@ int getPossiblePiece() {
 
 void addPossiblePiece(Piece *piece) {
 
-    if (possiblePieces == NULL)  {
-        initPossiblePieces();
-    }
-
-    ll_addLast(piece, possiblePieces->piecesList);
+    ll_addLast(piece, getPossiblePieces()->piecesList);
 
 }
 
@@ -72,7 +120,7 @@ void freeGame(Game *game) {
     free(game);
 }
 
-SearchingForGame * initSearchGame(PossiblePieces *pieces, int size, Player *player) {
+SearchingForGame *initSearchGame(PossiblePieces *pieces, int size, Player *player) {
 
     SearchingForGame *game = malloc(sizeof(SearchingForGame));
 
@@ -90,7 +138,7 @@ void deleteSearchGame(SearchingForGame *game) {
 
 }
 
-Player *initPlayer(char*name, int size) {
+Player *initPlayer(char *name, int size) {
 
     Player *player = malloc(sizeof(Player));
 
@@ -101,7 +149,7 @@ Player *initPlayer(char*name, int size) {
     return player;
 }
 
-void addPieceChosen(Player *player, Position *position, Piece*piece, PlacedDirection dir) {
+void addPieceChosen(Player *player, Position *position, Piece *piece, PlacedDirection dir) {
 
     GameStorage *storage = player->storage;
 
@@ -113,7 +161,7 @@ void addPieceChosen(Player *player, Position *position, Piece*piece, PlacedDirec
 
 }
 
-int canPlacePiece(Player *player, Position *pos, Piece*piece, PlacedDirection dir) {
+int canPlacePiece(Player *player, Position *pos, Piece *piece, PlacedDirection dir) {
 
     GameStorage *storage = player->storage;
 
@@ -132,17 +180,17 @@ SearchingForGame *initGameForPlayer(Player *player, int size) {
 
 }
 
-SearchingForGame * randomizePieces(Player *player, int size) {
+SearchingForGame *randomizePieces(Player *player, int size) {
 
     GameStorage *storage = player->storage;
 
-    PossiblePieces * pieces = getPossiblePieces();
+    PossiblePieces *pieces = getPossiblePieces();
 
-    struct Node_s * first = pieces->piecesList->first;
+    struct Node_s *first = pieces->piecesList->first;
 
     while (first != NULL) {
 
-        Piece * piece = (Piece *) first->data;
+        Piece *piece = (Piece *) first->data;
 
         int x = getRand(size), y = getRand(size);
 

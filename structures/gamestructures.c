@@ -1,4 +1,5 @@
 #include "gamestructures.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -117,6 +118,8 @@ Position **calculateNewPositions(Piece *piece, Position *base, PlacedDirection d
 
                 newPositions[pos++] = addToWithDirection(initPos(x, y), base, dir);
 
+                if (pos >= piece->size) break;
+
             }
         }
     }
@@ -138,7 +141,7 @@ Position **canPlace1BlockClearance(Piece *piece, Position *basePos, PlacedDirect
 
     Position **newPos = calculateNewPositions(piece, basePos, dir);
 
-    for (int i = 0; piece->size; i++) {
+    for (int i = 0; i < piece->size; i++) {
 
         Position *pos = newPos[i];
 
@@ -305,7 +308,7 @@ void removePlayedPieceQuad(QuadTree* qt, PieceInBoard *piece) {
 
 }
 
-void removePlayedPiece(GameStorage *gs, PieceInBoard *board) {
+void removePlacedPiece(GameStorage *gs, PieceInBoard *board) {
 
     switch (gs->type) {
         case GS_MATRIX:

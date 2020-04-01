@@ -11,9 +11,9 @@ BitMatrix * createBitMatrix(unsigned int rows, unsigned int columns, unsigned in
     matrix->rows = rows;
     matrix->columns = columns;
 
-    unsigned int matrix_size = matrix_size(matrix->rows, matrix->columns);
+    unsigned int matrix_size_i = matrix_size(matrix);
 
-    BitMap * map = createBitMap(matrix_size, word_size);
+    BitMap * map = createBitMap(matrix_size_i, word_size);
 
     matrix->data = map;
 

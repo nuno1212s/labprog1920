@@ -2,15 +2,25 @@
 #include "shell.h"
 #include "../structures/game.h"
 #include "../storagestructures/linkedlist.h"
+#include "../structures/gamestructures.h"
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-void sg_displayWhereToPlay(char *);
+void printPiece(void *piece) {
 
-void sg_showOffline();
+    Piece *realPiece = (Piece *) piece;
 
-void sg_displayMenu() {
+    printf("Piece Name: %s\n Size: %d\n", realPiece->name, realPiece->size);
+
+}
+
+Game *sg_displayWhereToPlay(char *);
+
+Game *sg_showOffline();
+
+Game *sg_displayMenu() {
 
     printf("# Hello, Welcome to battle of ships.\n");
     printf("Please insert your player name (MAX 25 chars):\n");
@@ -19,10 +29,10 @@ void sg_displayMenu() {
 
     scanf("%25s", name);
 
-    sg_displayWhereToPlay(name);
+    return sg_displayWhereToPlay(name);
 }
 
-void sg_displayWhereToPlay(char *name) {
+Game *sg_displayWhereToPlay(char *name) {
 
     printf("# Choose where you want to play: \n");
 
@@ -41,18 +51,14 @@ void sg_displayWhereToPlay(char *name) {
         case 1:
         case 2:
             printf("# This is unavailable at the time.\n");
-            sg_displayWhereToPlay(name);
-            break;
+            return sg_displayWhereToPlay(name);
         case 3:
 
-            sg_showOffline(name);
-
-            break;
+            return sg_showOffline(name);
         default:
             printf("# Number not unavailable.\n");
 
-            sg_displayWhereToPlay(name);
-            break;
+            return sg_displayWhereToPlay(name);
     }
 }
 
@@ -81,6 +87,19 @@ PossiblePieces *readPieces(int traySize) {
 
     printf("# 2) Create new pieces.\n");
 
+    int res = 0;
+
+    scanf("%d", &res);
+
+    switch (res) {
+
+        case 1:
+            return getPossiblePieces();
+
+        default:
+            return readPieces(traySize);
+
+    }
 }
 
 void scanName(int playerID, char *name) {
@@ -117,6 +136,8 @@ void printPieces(PossiblePieces *p, PieceInBoard **placedPieces) {
 
 int choosePiece(int maxPiece) {
 
+    printf("Choose the piece to place:\n");
+
     int chosen = 0;
 
     scanf("%d", &chosen);
@@ -132,7 +153,7 @@ int choosePiece(int maxPiece) {
 }
 
 PlacedDirection requestPlacedDirection() {
-    printf("Insert your desired rotation (0, 90, 180, 270)\n");
+    printf("Insert your desired rotation (0, 90, 180, 270):\n");
 
     int rotation = 0;
 
@@ -189,6 +210,8 @@ void attemptPlacePiece(int traySize, Player *player, PossiblePieces *pieces, Pie
         return;
     }
 
+    printPiece(piece);
+
     if (placed[chosenPiece] != NULL) {
         removePlacedPiece(player->storage, placed[chosenPiece]);
     }
@@ -196,6 +219,8 @@ void attemptPlacePiece(int traySize, Player *player, PossiblePieces *pieces, Pie
     Position *p = chooseWhereToPlace(traySize);
 
     PlacedDirection dir = requestPlacedDirection();
+
+    printf("%d", player->storage->type);
 
     PieceInBoard *placedPiece = insertPiece(player->storage, piece, p, dir);
 
@@ -210,6 +235,7 @@ void attemptPlacePiece(int traySize, Player *player, PossiblePieces *pieces, Pie
 
     placed[chosenPiece] = placedPiece;
 
+    displayGameTray(player, traySize);
 }
 
 int placedCount(PieceInBoard **board, int pieces) {
@@ -224,16 +250,7 @@ int placedCount(PieceInBoard **board, int pieces) {
     return count;
 }
 
-void placePieces(Game *g, Player *player, PossiblePieces *pieces) {
-
-    PieceInBoard *placed[pieces->piecesList->size];
-
-    while (placedCount(placed, pieces->piecesList->size) != pieces->piecesList->size) {
-        printPieces(pieces, placed);
-
-        attemptPlacePiece(g->size, player, pieces, placed);
-    }
-
+void placedAllPieces(Game *g, Player *player, PossiblePieces *pieces, PieceInBoard **placed) {
     printf("# You have placed all the pieces.\n");
 
     printf("# 1) Replace a piece.\n");
@@ -249,25 +266,49 @@ void placePieces(Game *g, Player *player, PossiblePieces *pieces) {
             printPieces(pieces, placed);
             attemptPlacePiece(g->size, player, pieces, placed);
 
-            placePieces(g, player, pieces);
+            placedAllPieces(g, player, pieces, placed);
             break;
         case 2:
             return;
+        default:
+            printf("Error, number not expected");
+            placedAllPieces(g, player, pieces, placed);
+
+            break;
     }
 }
 
-void sg_showOffline(char *player1Name) {
+void placePieces(Game *g, Player *player, PossiblePieces *pieces) {
+
+    PieceInBoard *placed[pieces->piecesList->size];
+
+    memset(placed, 0, pieces->piecesList->size * sizeof(PieceInBoard *));
+
+    while (placedCount(placed, pieces->piecesList->size) != pieces->piecesList->size) {
+        printPieces(pieces, placed);
+
+        attemptPlacePiece(g->size, player, pieces, placed);
+    }
+
+    placedAllPieces(g, player, pieces, placed);
+
+}
+
+Game *sg_showOffline(char *player1Name) {
 
     int traySize = readTraySize();
 
     PossiblePieces *pieces = readPieces(traySize);
+
+    LinkedList *list = pieces->piecesList;
+
+    ll_print(list, printPiece);
 
     char player2Name[25] = {'\0'};
 
     scanName(2, player2Name);
 
     Player *p1 = initPlayer(player1Name, traySize), *p2 = initPlayer(player2Name, traySize);
-    free(player2Name);
 
     Player **playerList = malloc(sizeof(Player *) * 2);
 
@@ -276,5 +317,75 @@ void sg_showOffline(char *player1Name) {
 
     Game *g = initGame(2, traySize, playerList);
 
+    printf("Player 1 please place your pieces.\n");
+
+    placePieces(g, p1, pieces);
+
+    printf("Player 2 please place your pieces.\n");
+
+    placePieces(g, p2, pieces);
+
+    return g;
+}
+
+void displayGameTray(Player *player, int size) {
+
+    GameStorage *storage = player->storage;
+
+    void* (*get)(void *, Position *) = NULL;
+
+    void *storageP = NULL;
+
+    switch (storage->type) {
+        case GS_QUAD:
+            get = (void* (*)(void *, Position *)) qt_lookup;
+            storageP = storage->data.quadTree;
+            break;
+        case GS_MATRIX:
+            get = (void* (*)(void *, Position *)) m_lookup;
+            storageP = storage->data.matrix;
+            break;
+    }
+
+    for (int row = size; row >= 0; row--) {
+
+
+        for (int i = 0; i < size; i++) {
+            printf("--");
+        }
+
+        printf("\n");
+
+        for (int column = 0; column < size; column++) {
+
+            Position p = {row, column};
+
+            printf("|");
+
+            void *result = get(storageP, &p);
+
+            if (result == NULL) {
+                printf(".");
+            } else {
+
+                PointStorage *ps = (PointStorage *) result;
+
+                if (ps->piece != NULL && ps->opponentHitPoint != NULL) {
+
+                    printf("H");
+
+                } else if (ps->piece != NULL) {
+                    printf("B");
+                } else {
+                    printf("M");
+                }
+
+            }
+
+        }
+
+        printf("|\n");
+
+    }
 
 }

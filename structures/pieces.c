@@ -51,7 +51,6 @@ Piece *initPiece(int size, char *name, BitMatrix *positions) {
     piece->matrix = positions;
 
     return piece;
-
 }
 
 BitMatrix *getPositions(Piece *piece) {

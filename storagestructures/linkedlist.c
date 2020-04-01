@@ -49,7 +49,7 @@ void *ll_get(LinkedList *list, int pos) {
         first = first->next;
     }
 
-    return first;
+    return first->data;
 }
 
 int ll_size(LinkedList *list) {
