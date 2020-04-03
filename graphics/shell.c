@@ -358,7 +358,7 @@ void displayGameTray(Player *player, int size) {
 
         for (int column = 0; column < size; column++) {
 
-            Position p = {row, column};
+            Position p = {column, row};
 
             printf("|");
 

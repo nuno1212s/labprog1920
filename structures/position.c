@@ -1,5 +1,6 @@
 #include "position.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 Position *initPos(int baseX, int baseY) {
 
@@ -39,46 +40,50 @@ Position *addToCoords(Position *pos, int x, int y) {
     return pos;
 }
 
-Position *addToWithDirection(Position *pos, Position *pos2, PlacedDirection placedDirection) {
+int p_sin(PlacedDirection direction) {
 
-    switch (placedDirection) {
+    switch (direction) {
 
-        case P_UP: {
+        case P_UP:
+            return 1;
+        case P_DOWN:
+            return -1;
+        default:
+            return 0;
 
-            pos->x += p_getBaseX(pos2);
-            pos->y += p_getBaseY(pos2);
+    }
 
-            break;
-        }
+}
 
-        case P_DOWN: {
+int p_cos(PlacedDirection direction) {
 
-            pos->x += p_getBaseX(pos2);
-            pos->y += -p_getBaseY(pos2);
+    switch (direction) {
 
-            break;
-        }
-
-        case P_LEFT: {
-
-            //90º counter clock wise rotation
-            pos->x += -p_getBaseY(pos2);
-            pos->y += p_getBaseX(pos2);
-
-            break;
-        }
-
-        case P_RIGHT: {
-
-            pos->x += p_getBaseY(pos2);
-            pos->y += p_getBaseX(pos2);
-
-            break;
-        }
+        case P_RIGHT:
+            return 1;
+        case P_LEFT:
+            return -1;
 
         default:
-            break;
+            return 0;
+
     }
+
+}
+
+Position *addToWithDirection(Position *pos, Position *pos2, PlacedDirection placedDirection) {
+
+    printf("Before rotation: %d, %d\n", p_getBaseX(pos), p_getBaseY(pos));
+
+    pos->x = pos->x * p_cos(placedDirection) + pos->y * p_sin(placedDirection);
+    pos->y = pos->x * p_sin(placedDirection) + pos->y * p_cos(placedDirection);
+
+    printf("After rotation: %d %d %d\n", p_getBaseX(pos), p_getBaseY(pos), placedDirection);
+
+    pos->x += p_getBaseX(pos2);
+    pos->y += p_getBaseY(pos2);
+
+    printf("After all: %d %d\n", p_getBaseX(pos), p_getBaseY(pos));
 
     return pos;
 }
