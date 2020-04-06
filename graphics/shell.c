@@ -348,8 +348,6 @@ void displayGameTray(Player *player, int size) {
     }
 
     for (int row = size; row >= 0; row--) {
-
-
         for (int i = 0; i < size; i++) {
             printf("--");
         }
