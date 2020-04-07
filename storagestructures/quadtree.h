@@ -79,4 +79,6 @@ void q_iterateAllPoints(QuadTree *, void (*)(void *));
 
 void freeQuad(QuadTree *);
 
+void printQuad(QuadTree *);
+
 #endif

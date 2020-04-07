@@ -27,6 +27,8 @@ void m_setBit(BitMatrix * matrix, unsigned int row, unsigned int col, unsigned i
     //Get the correct row position and add the correct column
     unsigned int slot_in_data = row * matrix->columns + col;
 
+    printf("%d %d %d\n", slot_in_data, row, col);
+
     setBit(data, slot_in_data, value);
 
 }
@@ -104,5 +106,31 @@ void freeBitMap(BitMap *map) {
     free(map->data);
 
     free(map);
+
+}
+
+void printBitMap(BitMap *map) {
+
+    for (int i = 0; i < map_size(map); i++) {
+
+        printf ("%d ", getBit(map, i));
+
+    }
+
+    printf("\n");
+}
+
+void printBitMatrix(BitMatrix *matrix) {
+
+    for (int x = 0; x < matrix_cols(matrix); x++) {
+
+        for (int y = 0; y < matrix_rows(matrix); y++) {
+
+            printf("%d ", m_getBit(matrix, x, y));
+
+        }
+
+        printf("\n");
+    }
 
 }

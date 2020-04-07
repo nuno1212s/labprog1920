@@ -20,10 +20,6 @@ void freePS(PointStorage *ps) {
         gs_freeHP(ps->opponentHitPoint);
     }
 
-    if (ps->piece != NULL) {
-        gs_freePIB(ps->piece);
-    }
-
     free(ps);
 
 }
@@ -110,9 +106,9 @@ Position **calculateNewPositions(Piece *piece, Position *base, PlacedDirection d
 
     int pos = 0;
 
-    for (int x = 0; x < matrix_rows(piece->matrix); x++) {
+    for (int x = 0; x < matrix_cols(piece->matrix); x++) {
 
-        for (int y = 0; y < matrix_cols(piece->matrix); y++) {
+        for (int y = 0; y < matrix_rows(piece->matrix); y++) {
 
             if (m_getBit(piece->matrix, x, y)) {
 
@@ -296,7 +292,6 @@ void removePlayedPieceQuad(QuadTree* qt, PieceInBoard *piece) {
     Position **pos = calculateNewPositions(piece->piece, piece->basePos, piece->direction);
 
     for (int i = 0; i < piece->piece->size; i++) {
-
         void *result = qt_lookup(qt, pos[i]);
 
         if (result == NULL) continue;
@@ -306,6 +301,7 @@ void removePlayedPieceQuad(QuadTree* qt, PieceInBoard *piece) {
         qt_delete(qt, pos[i]);
     }
 
+    gs_freePIB(piece);
 }
 
 void removePlacedPiece(GameStorage *gs, PieceInBoard *board) {

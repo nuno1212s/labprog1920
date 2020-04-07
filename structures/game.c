@@ -44,39 +44,37 @@ void createDefaultPossiblePieces() {
     BitMatrix *twoBlock = createBitMatrix(5, 5, 1);
 
     m_setBit(twoBlock, 0, 0, 1);
-    m_setBit(twoBlock, 1, 0, 1);
+    m_setBit(twoBlock, 0, 1, 1);
 
     addPossiblePiece(initPiece(2, "Two block machine", twoBlock));
 
     BitMatrix *threeBlock = createBitMatrix(5, 5, 1);
 
     m_setBit(threeBlock, 0, 0, 1);
-    m_setBit(threeBlock, 1, 0, 1);
-    m_setBit(threeBlock, 2, 0, 1);
+    m_setBit(threeBlock, 0, 1, 1);
+    m_setBit(threeBlock, 0, 2, 1);
 
     addPossiblePiece(initPiece(3, "Three block thingy", threeBlock));
 
     BitMatrix *destroyer = createBitMatrix(5, 5, 1);
 
     m_setBit(destroyer, 0, 0, 1);
-    m_setBit(destroyer, 1, 0, 1);
-    m_setBit(destroyer, 2, 0, 1);
-    m_setBit(destroyer, 3, 0, 1);
+    m_setBit(destroyer, 0, 1, 1);
+    m_setBit(destroyer, 0, 2, 1);
+    m_setBit(destroyer, 0, 3, 1);
 
     addPossiblePiece(initPiece(4, "Destroyer", destroyer));
 
     BitMatrix *lThing = createBitMatrix(5, 5, 1);
 
     m_setBit(lThing, 0, 0, 1);
-    m_setBit(lThing, 1, 0, 1);
-    m_setBit(lThing, 2, 0, 1);
-    m_setBit(lThing, 3, 0, 1);
     m_setBit(lThing, 0, 1, 1);
     m_setBit(lThing, 0, 2, 1);
+    m_setBit(lThing, 0, 3, 1);
+    m_setBit(lThing, 1, 0, 1);
+    m_setBit(lThing, 2, 0, 1);
 
     addPossiblePiece(initPiece(6, "L Remover", lThing));
-
-
 }
 
 int getPossiblePiece() {

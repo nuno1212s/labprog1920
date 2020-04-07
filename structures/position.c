@@ -44,9 +44,9 @@ int p_sin(PlacedDirection direction) {
 
     switch (direction) {
 
-        case P_UP:
+        case P_LEFT:
             return 1;
-        case P_DOWN:
+        case P_RIGHT:
             return -1;
         default:
             return 0;
@@ -59,11 +59,10 @@ int p_cos(PlacedDirection direction) {
 
     switch (direction) {
 
-        case P_RIGHT:
+        case P_UP:
             return 1;
-        case P_LEFT:
+        case P_DOWN:
             return -1;
-
         default:
             return 0;
 
@@ -73,10 +72,14 @@ int p_cos(PlacedDirection direction) {
 
 Position *addToWithDirection(Position *pos, Position *pos2, PlacedDirection placedDirection) {
 
-    printf("Before rotation: %d, %d\n", p_getBaseX(pos), p_getBaseY(pos));
+    printf("Before rotation: %d, %d %d %d\n", p_getBaseX(pos), p_getBaseY(pos), p_cos(placedDirection),
+           p_sin(placedDirection));
 
-    pos->x = pos->x * p_cos(placedDirection) + pos->y * p_sin(placedDirection);
-    pos->y = pos->x * p_sin(placedDirection) + pos->y * p_cos(placedDirection);
+    int x = p_getBaseX(pos),
+            y = p_getBaseY(pos);
+
+    pos->x = (x - 2) * p_cos(placedDirection) - (y - 2) * p_sin(placedDirection) + 2;
+    pos->y = (x - 2) * p_sin(placedDirection) + (y - 2) * p_cos(placedDirection) + 2;
 
     printf("After rotation: %d %d %d\n", p_getBaseX(pos), p_getBaseY(pos), placedDirection);
 

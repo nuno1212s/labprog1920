@@ -5,10 +5,10 @@
 #define p_getBaseY(p) (p->y)
 
 typedef enum {
-    P_UP,
-    P_DOWN,
-    P_LEFT,
-    P_RIGHT
+    P_UP,//UP is 0º
+    P_DOWN,//DOWN is 180º
+    P_LEFT,//LEFT is 90º
+    P_RIGHT//RIGHT is 270º
 } PlacedDirection;
 
 struct Position_ {

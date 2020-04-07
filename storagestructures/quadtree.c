@@ -298,8 +298,11 @@ QuadPoint *deleteLeaf(struct LeafNode_ *node, Position *pos) {
             point = node->positions[i];
 
             node->positions[i] = NULL;
-
         }
+    }
+
+    if (found) {
+        node->stored--;
     }
 
     return point;
@@ -474,5 +477,49 @@ void freeQuadPoint(QuadPoint *qp) {
     p_free(qp->pos);
 
     free(qp);
+
+}
+
+void printFullNode(struct QuadNode_ *);
+
+void printQuadNode(struct Node_ *quadNode) {
+
+    for (int i = 0; i < quadNode->stored; i++) {
+        printf("NODE-");
+        printFullNode(quadNode->children[i]);
+    }
+
+    printf("\n");
+
+}
+
+void printQuadLeaf(struct LeafNode_ *quadLeaf) {
+
+    for (int i = 0; i < quadLeaf->stored; i++ ){
+
+        QuadPoint *qp = quadLeaf->positions[i];
+
+        printf("(%d, %d, %p) \n", p_getBaseX(qp->pos), p_getBaseY(qp->pos), qp->value);
+    }
+
+}
+
+void printFullNode(struct QuadNode_ *qn) {
+
+    switch (qn->nodeKind) {
+
+        case QT_LEAF:
+            printQuadLeaf(qn->leaf);
+            break;
+        case QT_NODE:
+            printQuadNode(qn->node);
+            break;
+
+    }
+}
+
+void printQuad(QuadTree *qt) {
+
+    printFullNode(qt->rootNode);
 
 }

@@ -1,6 +1,7 @@
 #ifndef LABPROG_BITMAP_H
 #define LABPROG_BITMAP_H
 
+#define map_size(map) (map->size)
 #define matrix_rows(matrix) (matrix->rows)
 #define matrix_cols(matrix) (matrix->columns)
 #define matrix_size(matrix) (matrix_rows(matrix) * matrix_cols(matrix))
@@ -42,5 +43,9 @@ void setBit(BitMap *, unsigned int pos, unsigned int value);
 unsigned int getBit(BitMap *, unsigned int pos);
 
 void freeBitMap(BitMap *);
+
+void printBitMap(BitMap *);
+
+void printBitMatrix(BitMatrix *);
 
 #endif //LABPROG_BITMAP_H
