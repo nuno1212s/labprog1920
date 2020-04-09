@@ -12,6 +12,6 @@ void initGraphics(GRAPHICS);
 
 Game* displayMenu();
 
-void displayGame();
+void displayGame(Game *);
 
 #endif //LABPROG_GRAPHICS_H

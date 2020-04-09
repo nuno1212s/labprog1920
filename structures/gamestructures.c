@@ -270,7 +270,7 @@ void removePlayedPieceMatrix(Matrix *matrix, PieceInBoard *board) {
 
     Position **pos = calculateNewPositions(board->piece, board->basePos, board->direction);
 
-    for (int i = 0; i < board->piece->size;i ++) {
+    for (int i = 0; i < board->piece->size; i++) {
 
         void *result = m_lookup(matrix, pos[i]);
 
@@ -287,7 +287,7 @@ void removePlayedPieceMatrix(Matrix *matrix, PieceInBoard *board) {
 
 }
 
-void removePlayedPieceQuad(QuadTree* qt, PieceInBoard *piece) {
+void removePlayedPieceQuad(QuadTree *qt, PieceInBoard *piece) {
 
     Position **pos = calculateNewPositions(piece->piece, piece->basePos, piece->direction);
 
@@ -320,7 +320,7 @@ void removePlacedPiece(GameStorage *gs, PieceInBoard *board) {
 HitResponse hitNothing() {
     HitResponse s;
 
-    s.hit_type = HIT_NOTHING;
+    s.hit_type = HR_HIT_NOTHING;
 
     return s;
 }
@@ -328,7 +328,7 @@ HitResponse hitNothing() {
 HitResponse hitBoat(PieceInBoard *hit) {
     HitResponse s;
 
-    s.hit_type = HIT_BOAT;
+    s.hit_type = HR_HIT_BOAT;
     s.hit = hit;
 
     return s;
@@ -337,7 +337,7 @@ HitResponse hitBoat(PieceInBoard *hit) {
 HitResponse alreadyHit() {
     HitResponse s;
 
-    s.hit_type = ALREADY_HIT;
+    s.hit_type = HR_ALREADY_HIT;
 
     return s;
 }
@@ -411,7 +411,7 @@ HitResponse attemptHit(GameStorage *storage, Position *toHit) {
             break;
     }
 
-    if (s.hit_type == HIT_BOAT) {
+    if (s.hit_type == HR_HIT_BOAT) {
         incrementDestroyed(s.hit);
     }
 
@@ -485,25 +485,24 @@ int hasPlayedGeneric(void *storage, Position *pos, void *(*toLook)(void *, Posit
 
 int hasPlayed(GameStorage *storage, Position *pos) {
 
-    void * (*toLook)(void*, Position *) = NULL;
+    void *(*toLook)(void *, Position *) = NULL;
 
     void *actualStorage = NULL;
 
     switch (storage->type) {
         case GS_QUAD:
-            toLook = (void*(*)(void*, Position *)) qt_lookup;
+            toLook = (void *(*)(void *, Position *)) qt_lookup;
 
             actualStorage = storage->data.quadTree;
             break;
         case GS_MATRIX:
-            toLook = (void*(*)(void *, Position *)) m_lookup;
+            toLook = (void *(*)(void *, Position *)) m_lookup;
 
             actualStorage = storage->data.matrix;
             break;
     }
 
     return hasPlayedGeneric(actualStorage, pos, toLook);
-
 }
 
 int hasBeenDestroyed(GameStorage *storage, PieceInBoard *board) {

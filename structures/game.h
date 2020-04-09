@@ -11,7 +11,20 @@
 
 struct PossiblePieces_ {
 
-    LinkedList* piecesList;
+    LinkedList *piecesList;
+
+};
+
+struct Hit_ {
+
+    enum {
+        H_DESTROYED_BOAT,
+        H_HIT_BOAT,
+        H_MISSED,
+        H_ALREADY_HIT
+    } hitType;
+
+    PieceInBoard *hit;
 
 };
 
@@ -33,7 +46,7 @@ struct Game_ {
 
     int size;
 
-    struct Player_ ** players;
+    struct Player_ **players;
 
     int currentPlayerIndex;
 
@@ -57,7 +70,9 @@ typedef struct Game_ Game;
 
 typedef struct SearchingForGame_ SearchingForGame;
 
-Game* initGame(int, int, Player**);
+typedef struct Hit_ Hit;
+
+Game *initGame(int, int, Player **);
 
 void freeGame(Game *);
 
@@ -68,11 +83,30 @@ void freeGame(Game *);
  * @param size The size of the game tray
  * @return
  */
-Player* initPlayer(char *name, int size);
+Player *initPlayer(char *name, int size);
 
-void addPieceChosen(Player *, Position *, Piece*, PlacedDirection);
+Player *getCurrentPlayer(Game *);
 
-int canPlacePiece(Player *, Position *, Piece*, PlacedDirection);
+void goToNextPlayer(Game *);
+
+PieceInBoard *addPieceChosen(Player *, Position *, Piece *, PlacedDirection);
+
+int canPlacePiece(Player *, Position *, Piece *, PlacedDirection);
+
+/**
+ * Attempt to play in a position
+ *
+ * @return The result of the play
+ */
+Hit playAt(Game *, Player *, Position *);
+
+/**
+ * Check if the game has finished
+ *
+ * @param g The game to check
+ * @return -1 if the game has not finished, the index of the player that won if it has
+ */
+int hasFinished(Game *g);
 
 SearchingForGame *randomizePieces(Player *, int size);
 

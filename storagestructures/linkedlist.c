@@ -1,6 +1,11 @@
 #include <stdlib.h>
 #include "linkedlist.h"
 
+void freeNode(struct Node_s *node) {
+
+    free(node);
+
+}
 
 LinkedList *ll_initList() {
 
@@ -50,6 +55,82 @@ void *ll_get(LinkedList *list, int pos) {
     }
 
     return first->data;
+}
+
+void *ll_remove(LinkedList *list, int index) {
+
+    if (index < 0 || index >= ll_size(list)) {
+        return NULL;
+    }
+
+    struct Node_s* first = list->first;
+
+    void *data;
+
+    if (index == 0) {
+
+        list->first = first->next;
+
+        data = first->data;
+
+        if (first == list->last) {
+            //A list with a size of 1
+            list->last = NULL;
+        }
+
+        freeNode(first);
+
+        return data;
+    }
+
+    int current = 1;
+
+    struct Node_s* prev = first;
+
+    first = first->next;
+
+    while (first != NULL) {
+
+        if (current++ == index) {
+            prev->next = first->next;
+
+            if (first == list->last) {
+                list->last = prev;
+            }
+
+            data = first->data;
+
+            list->size--;
+
+            freeNode(first);
+
+            break;
+        }
+
+        prev = first;
+        first = first->next;
+    }
+
+    return data;
+}
+
+int ll_indexOf(LinkedList *list, void *data) {
+
+    int current = 0;
+
+    struct Node_s *first = list->first;
+
+    while (first != NULL) {
+
+        if (first->data == data) {
+            return current;
+        }
+
+        current++;
+        first = first->next;
+    }
+
+    return -1;
 }
 
 int ll_size(LinkedList *list) {

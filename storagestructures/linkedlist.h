@@ -27,7 +27,11 @@ void *ll_poll(LinkedList *);
 
 void *ll_peekLast(LinkedList *);
 
-void* ll_get(LinkedList *, int);
+void *ll_get(LinkedList *, int);
+
+void *ll_remove(LinkedList *, int);
+
+int ll_indexOf(LinkedList *, void *);
 
 int ll_size(LinkedList *);
 

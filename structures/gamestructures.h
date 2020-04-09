@@ -42,9 +42,9 @@ struct GameStorage_ {
 struct HitResponse_ {
 
     enum {
-        HIT_BOAT,
-        HIT_NOTHING,
-        ALREADY_HIT
+        HR_HIT_BOAT,
+        HR_HIT_NOTHING,
+        HR_ALREADY_HIT
     } hit_type;
 
     PieceInBoard *hit;

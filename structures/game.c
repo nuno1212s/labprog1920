@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "../storagestructures/bitmap.h"
+#include "gamestructures.h"
 
 #define MATRIX_THRESHOLD 10
 
@@ -136,6 +137,135 @@ void deleteSearchGame(SearchingForGame *game) {
 
 }
 
+static Hit destroyed(PieceInBoard *piece) {
+    Hit h;
+
+    h.hitType = H_DESTROYED_BOAT;
+
+    h.hit = piece;
+
+    return h;
+}
+
+static Hit hit(PieceInBoard *piece) {
+
+    Hit h;
+
+    h.hitType = H_HIT_BOAT;
+    h.hit = piece;
+
+    return h;
+}
+
+static Hit missed() {
+    Hit h;
+
+    h.hitType = H_MISSED;
+
+    h.hit = NULL;
+
+    return h;
+}
+
+static Hit alreadyHit() {
+    Hit h;
+
+    h.hitType = H_ALREADY_HIT;
+    h.hit = NULL;
+
+    return h;
+}
+
+Player *getCurrentPlayer(Game *game) {
+
+    if (game->currentPlayerIndex >= game->playerCount) {
+        return NULL;
+    }
+
+    Player *p = game->players[game->currentPlayerIndex];
+
+    return p;
+}
+
+void goToNextPlayer(Game *game) {
+
+    game->currentPlayerIndex++;
+
+    if (game->currentPlayerIndex >= game->playerCount) {
+        game->currentPlayerIndex = 0;
+    }
+
+}
+
+Hit playAt(Game *g, Player *player, Position *pos) {
+
+    if (hasPlayed(player->storage, pos)) {
+        return alreadyHit();
+    }
+
+    HitResponse res;
+
+    Player *otherPlayer = NULL;
+
+    for (int i = 0; i < g->playerCount; i++) {
+
+        if (i == g->currentPlayerIndex) continue;
+
+        Player *p = g->players[i];
+
+        res = attemptHit(p->storage, pos);
+        otherPlayer = p;
+    }
+
+    if (otherPlayer == NULL) {
+        fprintf(stderr, "There was an error with the player");
+        exit(1);
+    }
+
+    if (res.hit_type == HR_HIT_BOAT) {
+        registerHit(player->storage, pos, 1);
+
+        if (hasBeenDestroyed(otherPlayer->storage, res.hit)) {
+
+            int index = ll_indexOf(otherPlayer->currentActivePieces, res.hit);
+
+            ll_remove(otherPlayer->currentActivePieces, index);
+
+            return destroyed(res.hit);
+        }
+
+        return hit(res.hit);
+    } else {
+        registerHit(player->storage, pos, 0);
+
+        return missed();
+    }
+
+}
+
+int hasFinished(Game *g) {
+
+    int playerThatLost = -1;
+
+    for (int i = 0; i < g->playerCount; i++) {
+
+        Player *p = g->players[i];
+
+        if (ll_size(p->currentActivePieces) == 0) {
+            //If the player has no active pieces, then the other player has won
+
+            playerThatLost = i;
+            break;
+        }
+
+    }
+
+    if (playerThatLost == 0) return 1;
+    else if (playerThatLost == 1) return 0;
+
+    return -1;
+}
+
 Player *initPlayer(char *name, int size) {
 
     Player *player = malloc(sizeof(Player));
@@ -147,14 +277,21 @@ Player *initPlayer(char *name, int size) {
     return player;
 }
 
-void addPieceChosen(Player *player, Position *position, Piece *piece, PlacedDirection dir) {
+PieceInBoard* addPieceChosen(Player *player, Position *position, Piece *piece, PlacedDirection dir) {
 
     GameStorage *storage = player->storage;
 
-    PieceInBoard *board = insertPiece(storage, piece, position, dir);
+    if (canPlacePiece(player, position, piece, dir)) {
 
-    if (board == NULL) {
-        ll_addLast(board, player->currentActivePieces);
+        PieceInBoard *board = insertPiece(storage, piece, position, dir);
+
+        if (board == NULL) {
+            ll_addLast(board, player->currentActivePieces);
+        }
+
+        return board;
+    } else {
+        return NULL;
     }
 
 }

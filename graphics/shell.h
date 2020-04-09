@@ -6,6 +6,8 @@
 
 Game* sg_displayMenu();
 
+void sg_displayGame(Game *);
+
 void displayGameTray(Player *, int size);
 
 /**

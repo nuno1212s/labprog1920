@@ -1,7 +1,6 @@
 
 #include "shell.h"
 #include "../structures/game.h"
-#include "../structures/gamestructures.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -221,7 +220,7 @@ void attemptPlacePiece(int traySize, Player *player, PossiblePieces *pieces, Pie
 
     printf("%d", player->storage->type);
 
-    PieceInBoard *placedPiece = insertPiece(player->storage, piece, p, dir);
+    PieceInBoard *placedPiece = addPieceChosen(player, p, piece, dir);
 
     if (placedPiece == NULL) {
 
@@ -346,7 +345,13 @@ void displayGameTray(Player *player, int size) {
             break;
     }
 
+
+    for (int i = 0; i < size; i++) {
+        printf("%d", i);
+    }
+
     for (int row = size; row >= 0; row--) {
+
         for (int i = 0; i < size; i++) {
             printf("--");
         }
@@ -373,16 +378,26 @@ void displayGameTray(Player *player, int size) {
 
                 } else if (ps->piece != NULL) {
                     printf("B");
-                } else {
-                    printf("M");
                 }
 
+                if (ps->ownHitPoint != NULL) {
+                    printf("M");
+                }
             }
-
         }
 
         printf("|\n");
-
     }
+}
+
+void displayGameForPlayer(Game *g, Player *player) {
+
+
+
+}
+
+void displayGame(Game * g) {
+
+
 
 }
