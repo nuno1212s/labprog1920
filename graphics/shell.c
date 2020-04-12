@@ -1,10 +1,13 @@
 
 #include "shell.h"
 #include "../structures/game.h"
+#include "../storagestructures/linkedlist.h"
+#include "../structures/gamestructures.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 void printPiece(void *piece) {
 
@@ -94,10 +97,100 @@ PossiblePieces *readPieces(int traySize) {
         case 1:
             return getPossiblePieces();
 
+        case 2:
+            return readPossiblePieces();
+
         default:
             return readPieces(traySize);
 
     }
+}
+
+PossiblePieces *readPossiblePieces(int traySize) {
+  char[24] pieceName;
+  int size, x, y, numOfNewPieces = 0;
+  int nMaxofNewPieces = (pow(traySize, 2))/25;
+  BitMatrix *matrix = createBitMatrix(5, 5, 1);
+
+  printf("Number of new pieces to add: ");
+  scanf("%d", numOfNewPieces);
+
+  if(numOfNewPieces < 1 || numOfNewPieces > nMaxofNewPieces){
+    printf("Number of new pieces must be between 1 and %d.\n", nMaxofNewPieces);
+    printf("Number of new pieces to add: ");
+    scanf("%d", numOfNewPieces);
+  }
+
+  for (int i = 0; i < numOfNewPieces; i++) {
+    printf("New piece name (Max of 24 characters): ");
+    scanf("%24s", &pieceName);
+    printf("New piece size: ");
+    scanf("%d", &size);
+
+    if (size < 0 || size > 25) {
+      printf("Piece size must be between 1 and 25.\n");
+      printf("New piece size: ");
+      scanf("%d", &size);
+    }
+
+    printf("Enter new piece´s body coordenates.\n");
+    printf("X: ");
+    scanf("%d", &x);
+    printf("Y: ");
+    scanf("%d", &y);
+    m_setBit(matrix, x, y, 1);
+
+    for (int j = 0; j < size - 1; j++) {
+      printf("X: ");
+      scanf("%d", &x);
+      printf("Y: ");
+      scanf("%d", &y);
+      if (x == 0 && y == 0){
+        if (m_getBit(matrix, 1, 0) == 0 && m_getBit(matrix, 0, 1) == 0) {
+          printf("Body bits must be connected.\n");
+          j--;
+          continue;
+        }
+        else {
+          m_setBit(matrix, x, y, 1);
+        }
+      }
+      else if (x > 0 && y == 0) {
+        if (m_getBit(matrix, x-1, y) == 0 && m_getBit(matrix, x, y+1) == 0 && m_getBit(matrix, x+1, y) == 0) {
+          printf("Body bits must be connected.\n");
+          j--;
+          continue;
+        }
+        else {
+          m_setBit(matrix, x, y, 1);
+        }
+      }
+      else if (x == 0 && y > 0) {
+        if (m_getBit(matrix, x, y-1) == 0 && m_getBit(matrix, x+1, y) == 0 && m_getBit(matrix, x, y+1) == 0) {
+          printf("Body bits must be connected.\n");
+          j--;
+          continue;
+        }
+        else {
+          m_setBit(matrix, x, y, 1);
+        }
+      }
+      else {
+        if(m_getBit(matrix, x, y-1) == 0 && m_getBit(matrix, x+1, y) == 0 && m_getBit(matrix, x, y+1) == 0 && m_getBit(matrix, x-1, y) == 0) {
+          printf("Body bits must be connected.\n");
+          j--;
+          continue;
+        }
+        else {
+          m_setBit(matrix, x, y, 1);
+        }
+      }
+    }
+
+    addPossiblePiece(initPiece(size, pieceName, matrix));
+
+  }
+
 }
 
 void scanName(int playerID, char *name) {
@@ -220,7 +313,7 @@ void attemptPlacePiece(int traySize, Player *player, PossiblePieces *pieces, Pie
 
     printf("%d", player->storage->type);
 
-    PieceInBoard *placedPiece = addPieceChosen(player, p, piece, dir);
+    PieceInBoard *placedPiece = insertPiece(player->storage, piece, p, dir);
 
     if (placedPiece == NULL) {
 
@@ -345,13 +438,7 @@ void displayGameTray(Player *player, int size) {
             break;
     }
 
-
-    for (int i = 0; i < size; i++) {
-        printf("%d", i);
-    }
-
     for (int row = size; row >= 0; row--) {
-
         for (int i = 0; i < size; i++) {
             printf("--");
         }
@@ -378,26 +465,16 @@ void displayGameTray(Player *player, int size) {
 
                 } else if (ps->piece != NULL) {
                     printf("B");
-                }
-
-                if (ps->ownHitPoint != NULL) {
+                } else {
                     printf("M");
                 }
+
             }
+
         }
 
         printf("|\n");
+
     }
-}
-
-void displayGameForPlayer(Game *g, Player *player) {
-
-
-
-}
-
-void displayGame(Game * g) {
-
-
 
 }

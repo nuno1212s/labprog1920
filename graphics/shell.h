@@ -6,15 +6,13 @@
 
 Game* sg_displayMenu();
 
-void sg_displayGame(Game *);
-
 void displayGameTray(Player *, int size);
 
 /**
  * User defined possible game pieces
  * @return
  */
-PossiblePieces*readPossiblePieces();
+PossiblePieces*readPossiblePieces(int traySize);
 
 Piece* readPiece();
 
