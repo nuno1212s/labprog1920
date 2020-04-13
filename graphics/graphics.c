@@ -25,3 +25,13 @@ Game* displayMenu() {
     }
 
 }
+
+void displayGame(Game *g) {
+
+    switch (getGraphics()) {
+        case SHELL:
+            sg_displayGame(g);
+            break;
+    }
+
+}

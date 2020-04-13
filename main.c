@@ -9,5 +9,7 @@ int main() {
 
     Game* currentGame = displayMenu();
 
+    displayGame(currentGame);
+
     return 0;
 }

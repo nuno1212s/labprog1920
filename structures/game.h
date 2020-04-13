@@ -108,6 +108,8 @@ Hit playAt(Game *, Player *, Position *);
  */
 int hasFinished(Game *g);
 
+void randomizePiecesLeft(Player *, int size, PieceInBoard**, PossiblePieces*);
+
 SearchingForGame *randomizePieces(Player *, int size);
 
 SearchingForGame *initGameForPlayer(Player *, int size);
