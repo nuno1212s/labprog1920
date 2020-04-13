@@ -117,23 +117,23 @@ static PossiblePieces *readPieces(int traySize) {
 }
 
 PossiblePieces *readPossiblePieces(int traySize) {
-  char[24] pieceName;
+  char pieceName[24];
   int size, x, y, numOfNewPieces = 0;
   int nMaxofNewPieces = (pow(traySize, 2))/25;
   BitMatrix *matrix = createBitMatrix(5, 5, 1);
 
   printf("Number of new pieces to add: ");
-  scanf("%d", numOfNewPieces);
+  scanf("%d", &numOfNewPieces);
 
   if(numOfNewPieces < 1 || numOfNewPieces > nMaxofNewPieces){
     printf("Number of new pieces must be between 1 and %d.\n", nMaxofNewPieces);
     printf("Number of new pieces to add: ");
-    scanf("%d", numOfNewPieces);
+    scanf("%d", &numOfNewPieces);
   }
 
   for (int i = 0; i < numOfNewPieces; i++) {
     printf("New piece name (Max of 24 characters): ");
-    scanf("%24s", &pieceName);
+    scanf("%24s", pieceName);
     printf("New piece size: ");
     scanf("%d", &size);
 
