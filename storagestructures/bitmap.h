@@ -48,4 +48,6 @@ void printBitMap(BitMap *);
 
 void printBitMatrix(BitMatrix *);
 
+void printBitMatrixReversed(BitMatrix *);
+
 #endif //LABPROG_BITMAP_H

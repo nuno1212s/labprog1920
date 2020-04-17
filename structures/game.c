@@ -11,6 +11,14 @@ static PossiblePieces *possiblePieces = NULL;
 
 PossiblePieces *initPossiblePieces() {
 
+    if (possiblePieces != NULL) {
+        ll_forEach(possiblePieces->piecesList, gs_freePiece);
+
+        ll_free(possiblePieces->piecesList);
+
+        free(possiblePieces);
+    }
+
     possiblePieces = malloc(sizeof(PossiblePieces));
 
     possiblePieces->piecesList = ll_initList();
@@ -267,6 +275,7 @@ int hasFinished(Game *g) {
 
     return -1;
 }
+//(13, 1) (12, 1) (11, 1)
 
 Player *initPlayer(char *name, int size) {
 
@@ -340,12 +349,15 @@ void randomizePiecesLeft(Player *player, int size, PieceInBoard **placed, Possib
 
         PlacedDirection dir = getRand(4);
 
-        Position pos = {x, y};
+        Position *pos = initPos(x, y);
 
         PieceInBoard *placedPiece = NULL;
 
-        if ((placedPiece = addPieceChosen(player, &pos, piece, dir)) == NULL) {
+        if ((placedPiece = addPieceChosen(player, pos, piece, dir)) == NULL) {
             //Retry a different position
+
+            p_free(pos);
+
             continue;
         }
 

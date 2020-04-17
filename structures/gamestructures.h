@@ -32,6 +32,8 @@ struct GameStorage_ {
 
     GameStorageType type;
 
+    int size;
+
     union {
         Matrix *matrix;
 
@@ -126,6 +128,8 @@ void registerHit(GameStorage *, Position *, int result);
  * @return
  */
 int hasBeenDestroyed(GameStorage *, PieceInBoard *);
+
+Position **calculateNewPositions(Piece *piece, Position *base, PlacedDirection dir);
 
 void iterateAllStoredPoints(GameStorage *, void (*)(PointStorage *));
 

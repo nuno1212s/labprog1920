@@ -53,6 +53,8 @@ GameStorage *initGameStorage(int size, GameStorageType type) {
 
     GameStorage *gs = malloc(sizeof(GameStorage));
 
+    gs->size = size;
+
     gs->type = type;
 
     switch (type) {
@@ -114,8 +116,9 @@ Position **calculateNewPositions(Piece *piece, Position *base, PlacedDirection d
 
                 newPositions[pos++] = addToWithDirection(initPos(x, y), base, dir);
 
-                if (pos >= piece->size) break;
-
+                if (pos >= piece->size) {
+                    break;
+                }
             }
         }
     }
@@ -133,13 +136,20 @@ void freePositions(Position **pos, int size) {
 }
 
 Position **canPlace1BlockClearance(Piece *piece, Position *basePos, PlacedDirection dir, void *storage,
-                                   void *(*toCall)(void *, Position *)) {
+                                   void *(*toCall)(void *, Position *), int traySize) {
 
     Position **newPos = calculateNewPositions(piece, basePos, dir);
 
     for (int i = 0; i < piece->size; i++) {
 
         Position *pos = newPos[i];
+
+        int oGX = p_getBaseX(pos), oGY = p_getBaseY(pos);
+
+        if (oGX < 0 || oGX >= traySize || oGY < 0 || oGY >= traySize) {
+            freePositions(newPos, piece->size);
+            return NULL;
+        }
 
         for (int x = -1; x <= 1; x++) {
             for (int y = -1; y <= 1; y++) {
@@ -191,7 +201,7 @@ int gs_canPlayPiece(GameStorage *storage, Piece *piece, Position *pos, PlacedDir
 
     }
 
-    Position **positions = canPlace1BlockClearance(piece, pos, dir, storageObj, toLookFunc);
+    Position **positions = canPlace1BlockClearance(piece, pos, dir, storageObj, toLookFunc, storage->size);
 
     if (positions != NULL) {
         freePositions(positions, piece->size);
@@ -202,13 +212,13 @@ int gs_canPlayPiece(GameStorage *storage, Piece *piece, Position *pos, PlacedDir
     }
 }
 
-PieceInBoard *insertPieceQuad(QuadTree *qt, Piece *piece, Position *basePos, PlacedDirection dir) {
+PieceInBoard *insertPieceQuad(QuadTree *qt, Piece *piece, Position *basePos, PlacedDirection dir, int size) {
 
     void *(*toLookFunc)(void *, Position *) = (void *(*)(void *, Position *)) qt_lookup;
 
     Position **pos;
 
-    if ((pos = canPlace1BlockClearance(piece, basePos, dir, qt, toLookFunc)) != NULL) {
+    if ((pos = canPlace1BlockClearance(piece, basePos, dir, qt, toLookFunc, size)) != NULL) {
         PieceInBoard *board = initPieceInBoard(piece, basePos, dir);
 
         for (int i = 0; i < piece->size; i++) {
@@ -225,12 +235,12 @@ PieceInBoard *insertPieceQuad(QuadTree *qt, Piece *piece, Position *basePos, Pla
     return NULL;
 }
 
-PieceInBoard *insertPieceMatrix(Matrix *matrix, Piece *piece, Position *basePos, PlacedDirection dir) {
+PieceInBoard *insertPieceMatrix(Matrix *matrix, Piece *piece, Position *basePos, PlacedDirection dir, int size) {
     void *(*lookUpFunc)(void *, Position *) = (void *(*)(void *, Position *)) &m_lookup;
 
     Position **positions;
 
-    if ((positions = canPlace1BlockClearance(piece, basePos, dir, matrix, lookUpFunc)) != NULL) {
+    if ((positions = canPlace1BlockClearance(piece, basePos, dir, matrix, lookUpFunc, size)) != NULL) {
         PieceInBoard *board = initPieceInBoard(piece, basePos, dir);
 
         for (int i = 0; i < piece->size; i++) {
@@ -254,11 +264,11 @@ PieceInBoard *insertPiece(GameStorage *gs, Piece *piece, Position *basePos, Plac
     switch (gs->type) {
 
         case GS_MATRIX: {
-            return insertPieceMatrix(gs->data.matrix, piece, basePos, dir);
+            return insertPieceMatrix(gs->data.matrix, piece, basePos, dir, gs->size);
         }
 
         case GS_QUAD: {
-            return insertPieceQuad(gs->data.quadTree, piece, basePos, dir);
+            return insertPieceQuad(gs->data.quadTree, piece, basePos, dir, gs->size);
         }
 
     }
@@ -369,8 +379,13 @@ HitResponse attemptHitQuad(QuadTree *tree, Position *toHit) {
 
     point->opponentHitPoint = initHitPoint(toHit, isHit);
 
-    return hitBoat(point->piece);
+    if (isHit) {
+        return hitBoat(point->piece);
+    } else {
+        return hitNothing();
+    }
 }
+//(15, 6) (15, 7) (15, 8)
 
 HitResponse attemptHitMatrix(Matrix *matrix, Position *toHit) {
 

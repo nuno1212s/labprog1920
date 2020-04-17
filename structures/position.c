@@ -72,8 +72,8 @@ int p_cos(PlacedDirection direction) {
 
 Position *addToWithDirection(Position *pos, Position *pos2, PlacedDirection placedDirection) {
 
-    printf("Before rotation: %d, %d %d %d\n", p_getBaseX(pos), p_getBaseY(pos), p_cos(placedDirection),
-           p_sin(placedDirection));
+//    printf("Before rotation: %d, %d %d %d\n", p_getBaseX(pos), p_getBaseY(pos), p_cos(placedDirection),
+//           p_sin(placedDirection));
 
     int x = p_getBaseX(pos),
             y = p_getBaseY(pos);
@@ -81,12 +81,14 @@ Position *addToWithDirection(Position *pos, Position *pos2, PlacedDirection plac
     pos->x = (x - 2) * p_cos(placedDirection) - (y - 2) * p_sin(placedDirection) + 2;
     pos->y = (x - 2) * p_sin(placedDirection) + (y - 2) * p_cos(placedDirection) + 2;
 
-    printf("After rotation: %d %d %d\n", p_getBaseX(pos), p_getBaseY(pos), placedDirection);
+//    printf("After rotation: %d %d %d\n", p_getBaseX(pos), p_getBaseY(pos), placedDirection);
+
+//    printf("Adding: %d %d\n", p_getBaseX(pos2), p_getBaseY(pos2));
 
     pos->x += p_getBaseX(pos2);
     pos->y += p_getBaseY(pos2);
 
-    printf("After all: %d %d\n", p_getBaseX(pos), p_getBaseY(pos));
+//    printf("After all: %d %d\n", p_getBaseX(pos), p_getBaseY(pos));
 
     return pos;
 }

@@ -1,7 +1,6 @@
 
 #include "shell.h"
-#include "../structures/game.h"
-#include "../storagestructures/linkedlist.h"
+
 #include "../structures/gamestructures.h"
 
 #include <stdio.h>
@@ -24,6 +23,14 @@ static void printPieceInBoard(void *piece) {
     int pieceSize = piB->piece->size;
 
     printf("# %s HP: %d/%d (%d hits taken)\n", piB->piece->name, pieceSize - piB->destroyed, pieceSize, piB->destroyed);
+
+    Position **pos = calculateNewPositions(piB->piece, piB->basePos, piB->direction);
+
+    for (int i = 0; i < pieceSize; i++) {
+        printf("(%d, %d) ", p_getBaseX(pos[i]), p_getBaseY(pos[i]));
+    }
+
+    printf("\n");
 
 }
 
@@ -116,90 +123,110 @@ static PossiblePieces *readPieces(int traySize) {
     }
 }
 
-PossiblePieces *readPossiblePieces(int traySize) {
-  char pieceName[24];
-  int size, x, y, numOfNewPieces = 0;
-  int nMaxofNewPieces = (pow(traySize, 2))/25;
-  BitMatrix *matrix = createBitMatrix(5, 5, 1);
+int getNumberOfPiece(int traySize) {
+    int numOfNewPieces = 0;
+    int nMaxofNewPieces = (pow(traySize, 2)) / 25;
 
-  printf("Number of new pieces to add: ");
-  scanf("%d", &numOfNewPieces);
-
-  if(numOfNewPieces < 1 || numOfNewPieces > nMaxofNewPieces){
-    printf("Number of new pieces must be between 1 and %d.\n", nMaxofNewPieces);
     printf("Number of new pieces to add: ");
     scanf("%d", &numOfNewPieces);
-  }
 
-  for (int i = 0; i < numOfNewPieces; i++) {
-    printf("New piece name (Max of 24 characters): ");
-    scanf("%24s", pieceName);
+    if (numOfNewPieces < 1 || numOfNewPieces > nMaxofNewPieces) {
+        printf("Number of new pieces must be between 1 and %d.\n", nMaxofNewPieces);
+        return getNumberOfPiece(traySize);
+    }
+
+    return numOfNewPieces;
+}
+
+int getPieceSize(int maxSize) {
+    int size;
+
     printf("New piece size: ");
     scanf("%d", &size);
 
-    if (size < 0 || size > 25) {
-      printf("Piece size must be between 1 and 25.\n");
-      printf("New piece size: ");
-      scanf("%d", &size);
+    if (size <= 0 || size > 25) {
+        printf("Piece size must be between 1 and %d.\n", maxSize);
+        return getPieceSize(maxSize);
     }
 
-    printf("Enter new piece´s body coordenates.\n");
-    printf("X: ");
-    scanf("%d", &x);
-    printf("Y: ");
-    scanf("%d", &y);
-    m_setBit(matrix, x, y, 1);
+    return size;
+}
 
-    for (int j = 0; j < size - 1; j++) {
-      printf("X: ");
-      scanf("%d", &x);
-      printf("Y: ");
-      scanf("%d", &y);
-      if (x == 0 && y == 0){
-        if (m_getBit(matrix, 1, 0) == 0 && m_getBit(matrix, 0, 1) == 0) {
-          printf("Body bits must be connected.\n");
-          j--;
-          continue;
-        }
-        else {
-          m_setBit(matrix, x, y, 1);
-        }
-      }
-      else if (x > 0 && y == 0) {
-        if (m_getBit(matrix, x-1, y) == 0 && m_getBit(matrix, x, y+1) == 0 && m_getBit(matrix, x+1, y) == 0) {
-          printf("Body bits must be connected.\n");
-          j--;
-          continue;
-        }
-        else {
-          m_setBit(matrix, x, y, 1);
-        }
-      }
-      else if (x == 0 && y > 0) {
-        if (m_getBit(matrix, x, y-1) == 0 && m_getBit(matrix, x+1, y) == 0 && m_getBit(matrix, x, y+1) == 0) {
-          printf("Body bits must be connected.\n");
-          j--;
-          continue;
-        }
-        else {
-          m_setBit(matrix, x, y, 1);
-        }
-      }
-      else {
-        if(m_getBit(matrix, x, y-1) == 0 && m_getBit(matrix, x+1, y) == 0 && m_getBit(matrix, x, y+1) == 0 && m_getBit(matrix, x-1, y) == 0) {
-          printf("Body bits must be connected.\n");
-          j--;
-          continue;
-        }
-        else {
-          m_setBit(matrix, x, y, 1);
-        }
-      }
+int canPlace(int x, int y, BitMatrix *matrix) {
+
+    if (m_getBit(matrix, x, y) == 1) {
+        return 0;
     }
 
-    addPossiblePiece(initPiece(size, pieceName, matrix));
+    for (int aX = -1; aX <= 1; aX++) {
+        for (int aY = -1; aY <= 1; aY++) {
+            if (aX == aY) continue;
 
-  }
+            int finalX = x + aX, finalY = y + aY;
+
+            if (finalX < 0 || finalX >= matrix_cols(matrix)) {
+                continue;
+            }
+
+            if (finalY < 0 || finalY >= matrix_rows(matrix)) {
+                continue;
+            }
+
+            if (m_getBit(matrix, finalX, finalY)) {
+                return 1;
+            }
+
+        }
+    }
+
+    return 0;
+}
+
+PossiblePieces *readPossiblePieces(int traySize) {
+
+    initPossiblePieces();
+
+    int numOfNewPieces = getNumberOfPiece(traySize);
+
+    for (int i = 0; i < numOfNewPieces; i++) {
+        char pieceName[24];
+        int size, x, y;
+
+        BitMatrix *matrix = createBitMatrix(5, 5, 1);
+
+        printf("New piece name (Max of 24 characters): ");
+        scanf("%24s", pieceName);
+
+        size = getPieceSize(25);
+
+        printf("Enter new piece´s body coordenates.\n");
+        printf("X: ");
+        scanf("%d", &x);
+        printf("Y: ");
+        scanf("%d", &y);
+        m_setBit(matrix, x, y, 1);
+
+        for (int j = 0; j < size - 1; j++) {
+            printf("X: ");
+            scanf("%d", &x);
+            printf("Y: ");
+            scanf("%d", &y);
+
+            if (canPlace(x, y, matrix)) {
+                m_setBit(matrix, x, y, 1);
+            } else {
+                printf("Failed to add piece. You cannot place it there.\n");
+                j--;
+                continue;
+            }
+
+            printBitMatrixReversed(matrix);
+        }
+
+        addPossiblePiece(initPiece(size, pieceName, matrix));
+    }
+
+    return getPossiblePieces();
 
 }
 
@@ -445,17 +472,17 @@ void displayGameTray(Player *player, int size) {
 
     GameStorage *storage = player->storage;
 
-    void* (*get)(void *, Position *) = NULL;
+    void *(*get)(void *, Position *) = NULL;
 
     void *storageP = NULL;
 
     switch (storage->type) {
         case GS_QUAD:
-            get = (void* (*)(void *, Position *)) qt_lookup;
+            get = (void *(*)(void *, Position *)) qt_lookup;
             storageP = storage->data.quadTree;
             break;
         case GS_MATRIX:
-            get = (void* (*)(void *, Position *)) m_lookup;
+            get = (void *(*)(void *, Position *)) m_lookup;
             storageP = storage->data.matrix;
             break;
     }
@@ -556,12 +583,16 @@ void displayGameForPlayer(Game *g, Player *player) {
     getPlaySpot(g, player);
 }
 
-void sg_displayGame(Game * g) {
+void sg_displayGame(Game *g) {
 
-    printf("%d", hasFinished(g));
+    int winner = 0;
 
-    while (hasFinished(g) == -1) {
+    while ((winner = hasFinished(g)) == -1) {
         displayGameForPlayer(g, getCurrentPlayer(g));
     }
+
+    Player *p = g->players[winner];
+
+    printf("The winner of the game was: %s with %d boats remaining\n", p->name, ll_size(p->currentActivePieces));
 
 }

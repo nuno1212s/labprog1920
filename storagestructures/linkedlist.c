@@ -78,6 +78,8 @@ void *ll_remove(LinkedList *list, int index) {
             list->last = NULL;
         }
 
+        list->size--;
+
         freeNode(first);
 
         return data;
@@ -245,5 +247,13 @@ void ll_forEach(LinkedList *list, void (*accept)(void *)) {
 
         first = first->next;
     }
+
+}
+
+void ll_free(LinkedList *list) {
+
+    ll_clear(list);
+
+    free(list);
 
 }

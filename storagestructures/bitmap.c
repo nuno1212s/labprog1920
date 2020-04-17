@@ -4,7 +4,7 @@
 #include <math.h>
 
 
-BitMatrix * createBitMatrix(unsigned int rows, unsigned int columns, unsigned int word_size) {
+BitMatrix *createBitMatrix(unsigned int rows, unsigned int columns, unsigned int word_size) {
 
     BitMatrix *matrix = malloc(sizeof(BitMatrix));
 
@@ -13,27 +13,27 @@ BitMatrix * createBitMatrix(unsigned int rows, unsigned int columns, unsigned in
 
     unsigned int matrix_size_i = matrix_size(matrix);
 
-    BitMap * map = createBitMap(matrix_size_i, word_size);
+    BitMap *map = createBitMap(matrix_size_i, word_size);
 
     matrix->data = map;
 
     return matrix;
 }
 
-void m_setBit(BitMatrix * matrix, unsigned int row, unsigned int col, unsigned int value) {
+void m_setBit(BitMatrix *matrix, unsigned int row, unsigned int col, unsigned int value) {
 
     BitMap *data = matrix->data;
 
     //Get the correct row position and add the correct column
     unsigned int slot_in_data = row * matrix->columns + col;
 
-    printf("%d %d %d\n", slot_in_data, row, col);
+//    printf("%d %d %d\n", slot_in_data, row, col);
 
     setBit(data, slot_in_data, value);
 
 }
 
-unsigned int m_getBit(BitMatrix * matrix, unsigned int row, unsigned int col) {
+unsigned int m_getBit(BitMatrix *matrix, unsigned int row, unsigned int col) {
 
     BitMap *data = matrix->data;
 
@@ -91,7 +91,7 @@ void setBit(BitMap *map, unsigned int pos, unsigned int value) {
 
 unsigned int getBit(BitMap *map, unsigned int pos) {
 
-    unsigned char * data = map->data;
+    unsigned char *data = map->data;
 
     unsigned int bitPos = pos * map->word_size, bytePos = bitPos / map->blockSize,
             withinBlock = bitPos % map->blockSize;
@@ -113,7 +113,7 @@ void printBitMap(BitMap *map) {
 
     for (int i = 0; i < map_size(map); i++) {
 
-        printf ("%d ", getBit(map, i));
+        printf("%d ", getBit(map, i));
 
     }
 
@@ -122,9 +122,21 @@ void printBitMap(BitMap *map) {
 
 void printBitMatrix(BitMatrix *matrix) {
 
-    for (int x = 0; x < matrix_cols(matrix); x++) {
+    for (int y = 0; y < matrix_rows(matrix); y++) {
+        for (int x = 0; x < matrix_cols(matrix); x++) {
 
-        for (int y = 0; y < matrix_rows(matrix); y++) {
+            printf("%d ", m_getBit(matrix, x, y));
+
+        }
+
+        printf("\n");
+    }
+
+}
+
+void printBitMatrixReversed(BitMatrix *matrix) {
+    for (int y = matrix_rows(matrix) - 1; y >= 0; y--) {
+        for (int x = 0; x < matrix_cols(matrix); x++) {
 
             printf("%d ", m_getBit(matrix, x, y));
 

@@ -43,6 +43,8 @@ void ll_addFirst(void *, LinkedList *);
 
 void ll_clear(LinkedList *);
 
+void ll_free(LinkedList*);
+
 void ll_print(LinkedList *, void (*)(void *));
 
 void ll_forEach(LinkedList *, void (*)(void *));
