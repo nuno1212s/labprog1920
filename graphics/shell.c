@@ -182,6 +182,22 @@ int canPlace(int x, int y, BitMatrix *matrix) {
     return 0;
 }
 
+int getAmountofPiecesFor(int max) {
+
+    printf("How many boats of this kind do you want to have? Max is %d\n", max);
+
+    int amount = 0;
+
+    scanf("%d", &amount);
+
+    if (amount > max) {
+        printf("The number is too high. The max is %d", max);
+        return getAmountofPiecesFor(max);
+    }
+
+    return amount;
+}
+
 PossiblePieces *readPossiblePieces(int traySize) {
 
     initPossiblePieces();
@@ -223,7 +239,15 @@ PossiblePieces *readPossiblePieces(int traySize) {
             printBitMatrixReversed(matrix);
         }
 
-        addPossiblePiece(initPiece(size, pieceName, matrix));
+        int amount = getAmountofPiecesFor((numOfNewPieces) - i);
+
+        Piece *piece = initPiece(size, pieceName, matrix);
+
+        for (int a = 0; a < amount; a++) {
+            addPossiblePiece(piece);
+        }
+
+        i += (amount - 1);
     }
 
     return getPossiblePieces();
