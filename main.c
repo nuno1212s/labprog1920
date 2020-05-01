@@ -11,5 +11,7 @@ int main() {
 
     displayGame(currentGame);
 
+    freeGame(currentGame);
+
     return 0;
 }

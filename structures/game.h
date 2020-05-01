@@ -127,6 +127,8 @@ void deleteSearchGame(SearchingForGame *);
 
 PossiblePieces *initPossiblePieces();
 
+void createDefaultPossiblePieces(int size);
+
 PossiblePieces *getPossiblePieces();
 
 void addPossiblePiece(Piece *piece);

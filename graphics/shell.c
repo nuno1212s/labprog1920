@@ -112,6 +112,7 @@ static PossiblePieces *readPieces(int traySize) {
     switch (res) {
 
         case 1:
+            createDefaultPossiblePieces(traySize);
             return getPossiblePieces();
 
         case 2:

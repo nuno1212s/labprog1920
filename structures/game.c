@@ -26,14 +26,12 @@ PossiblePieces *initPossiblePieces() {
     return possiblePieces;
 }
 
-void createDefaultPossiblePieces();
-
 PossiblePieces *getPossiblePieces() {
 
     if (possiblePieces == NULL) {
         initPossiblePieces();
 
-        createDefaultPossiblePieces();
+        createDefaultPossiblePieces(20);
 
         return possiblePieces;
 
@@ -42,20 +40,39 @@ PossiblePieces *getPossiblePieces() {
     return possiblePieces;
 }
 
-void createDefaultPossiblePieces() {
+void createDefaultPossiblePieces(int size) {
+
+    initPossiblePieces();
+
+    int pieceCount = (size * size) / 25;
+
+    int onePiece = pieceCount * 0.1,
+            twoPieces = pieceCount * 0.2,
+            threePieces = pieceCount * 0.2,
+            fourPiece = pieceCount * 0.2,
+            lPiece = pieceCount * 0.2,
+            weird = pieceCount * 0.1;
 
     BitMatrix *matrix = createBitMatrix(5, 5, 1);
 
     m_setBit(matrix, 0, 0, 1);
 
-    addPossiblePiece( initPiece(1, "One block wonder", matrix));
+    Piece *OneBlock = initPiece(1, "One block", matrix);
+
+    for (int i = 0; i < onePiece; i++) {
+        addPossiblePiece(OneBlock);
+    }
 
     BitMatrix *twoBlock = createBitMatrix(5, 5, 1);
 
     m_setBit(twoBlock, 0, 0, 1);
     m_setBit(twoBlock, 0, 1, 1);
 
-    addPossiblePiece(initPiece(2, "Two block machine", twoBlock));
+    Piece *TwoBlock = initPiece(2, "Two blocks", twoBlock);
+
+    for (int i = 0; i < twoPieces; i++) {
+        addPossiblePiece(TwoBlock);
+    }
 
     BitMatrix *threeBlock = createBitMatrix(5, 5, 1);
 
@@ -63,7 +80,11 @@ void createDefaultPossiblePieces() {
     m_setBit(threeBlock, 0, 1, 1);
     m_setBit(threeBlock, 0, 2, 1);
 
-    addPossiblePiece(initPiece(3, "Three block thingy", threeBlock));
+    Piece *ThreePiece = initPiece(3, "Three blocks", threeBlock);
+
+    for (int i = 0; i < threePieces; i++) {
+        addPossiblePiece(ThreePiece);
+    }
 
     BitMatrix *destroyer = createBitMatrix(5, 5, 1);
 
@@ -72,7 +93,10 @@ void createDefaultPossiblePieces() {
     m_setBit(destroyer, 0, 2, 1);
     m_setBit(destroyer, 0, 3, 1);
 
-    addPossiblePiece(initPiece(4, "Destroyer", destroyer));
+    Piece *fourBlock = initPiece(4, "Destroyer", destroyer);
+
+    for (int i = 0; i < fourPiece; i++)
+        addPossiblePiece(fourBlock);
 
     BitMatrix *lThing = createBitMatrix(5, 5, 1);
 
@@ -83,7 +107,28 @@ void createDefaultPossiblePieces() {
     m_setBit(lThing, 1, 0, 1);
     m_setBit(lThing, 2, 0, 1);
 
-    addPossiblePiece(initPiece(6, "L Remover", lThing));
+    Piece *L = initPiece(6, "L", lThing);
+
+    for (int i = 0; i < lPiece; i++)
+        addPossiblePiece(L);
+
+    BitMatrix *twoStripe = createBitMatrix(5, 5, 1);
+
+    m_setBit(twoStripe, 0, 0, 1);
+    m_setBit(twoStripe, 0, 1, 1);
+    m_setBit(twoStripe, 0, 2, 1);
+    m_setBit(twoStripe, 0, 3, 1);
+    m_setBit(twoStripe, 1, 0, 1);
+    m_setBit(twoStripe, 1, 1, 1);
+    m_setBit(twoStripe, 1, 2, 1);
+    m_setBit(twoStripe, 1, 3, 1);
+    m_setBit(twoStripe, 2, 0, 1);
+    m_setBit(twoStripe, 3, 0, 1);
+
+    Piece *weirdPiece = initPiece(10, "Weird", twoStripe);
+
+    for (int i = 0; i < weird; i ++)
+        addPossiblePiece(weirdPiece);
 }
 
 int getPossiblePiece() {
@@ -290,7 +335,7 @@ Player *initPlayer(char *name, int size) {
     return player;
 }
 
-PieceInBoard* addPieceChosen(Player *player, Position *position, Piece *piece, PlacedDirection dir) {
+PieceInBoard *addPieceChosen(Player *player, Position *position, Piece *piece, PlacedDirection dir) {
 
     GameStorage *storage = player->storage;
 
