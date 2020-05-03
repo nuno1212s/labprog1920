@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <unistd.h>
 
 static void printPiece(void *piece) {
 
@@ -542,22 +543,22 @@ void displayGameTray(Player *player, int size) {
                 PointStorage *ps = (PointStorage *) result;
 
                 if (ps->piece != NULL) {
-                    printf("B");
+                    printf("#");
                 }
 
                 if (ps->ownHitPoint != NULL) {
                     if (ps->ownHitPoint->hit) {
-                        printf("MH");
+                        printf("*");
                     } else {
-                        printf("MM");
+                        printf("+");
                     }
                 }
 
                 if (ps->opponentHitPoint != NULL) {
                     if (ps->opponentHitPoint->hit) {
-                        printf("OH");
+                        printf("-");
                     } else {
-                        printf("OM");
+                        printf("=");
                     }
                 }
             }
@@ -566,7 +567,7 @@ void displayGameTray(Player *player, int size) {
         printf("|\n");
     }
 
-    printf("B - Your boat, OH - Opponent Hit, OM - Opponent Miss, MH - My Hit, MM - My miss\n");
+    printf("# - Your boat, - - Opponent Hit, = - Opponent Miss, # - My Hit, + - My miss\n");
 }
 
 static void getPlaySpot(Game *g, Player *player) {
@@ -613,7 +614,9 @@ void sg_displayGame(Game *g) {
     int winner = 0;
 
     while ((winner = hasFinished(g)) == -1) {
+        system("clear");
         displayGameForPlayer(g, getCurrentPlayer(g));
+        sleep(2);
     }
 
     Player *p = g->players[winner];
