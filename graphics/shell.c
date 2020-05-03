@@ -1,8 +1,6 @@
 
 #include "shell.h"
 
-#include "../structures/gamestructures.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -489,6 +487,8 @@ Game *sg_showOffline(char *player1Name) {
     printf("Player 2 please place your pieces.\n");
 
     placePieces(g, p2, pieces);
+
+    sg_displayGame(g);
 
     return g;
 }

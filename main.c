@@ -9,8 +9,6 @@ int main() {
 
     Game* currentGame = displayMenu();
 
-    displayGame(currentGame);
-
     freeGame(currentGame);
 
     return 0;

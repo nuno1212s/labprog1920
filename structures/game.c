@@ -12,7 +12,7 @@ static PossiblePieces *possiblePieces = NULL;
 PossiblePieces *initPossiblePieces() {
 
     if (possiblePieces != NULL) {
-        ll_forEach(possiblePieces->piecesList, gs_freePiece);
+        ll_forEach(possiblePieces->piecesList, (void (*)(void *)) gs_freePiece);
 
         ll_free(possiblePieces->piecesList);
 

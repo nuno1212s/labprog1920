@@ -8,8 +8,15 @@ typedef enum {
     SHELL
 } GRAPHICS;
 
+/**
+ * Initialize the graphics to a certain graphics configuration
+ */
 void initGraphics(GRAPHICS);
 
+/**
+ * Display the menu of the game
+ * @return The game object of the game
+ */
 Game* displayMenu();
 
 void displayGame(Game *);

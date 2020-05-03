@@ -15,14 +15,16 @@ struct PossiblePieces_ {
 
 };
 
+typedef enum {
+    H_DESTROYED_BOAT,
+    H_HIT_BOAT,
+    H_MISSED,
+    H_ALREADY_HIT
+} HitType;
+
 struct Hit_ {
 
-    enum {
-        H_DESTROYED_BOAT,
-        H_HIT_BOAT,
-        H_MISSED,
-        H_ALREADY_HIT
-    } hitType;
+    HitType hitType;
 
     PieceInBoard *hit;
 
@@ -108,7 +110,7 @@ Hit playAt(Game *, Player *, Position *);
  */
 int hasFinished(Game *g);
 
-void randomizePiecesLeft(Player *, int size, PieceInBoard**, PossiblePieces*);
+void randomizePiecesLeft(Player *, int size, PieceInBoard **, PossiblePieces *);
 
 SearchingForGame *randomizePieces(Player *, int size);
 
