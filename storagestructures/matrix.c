@@ -27,7 +27,6 @@ void *m_lookup(Matrix *matrix, Position *pos) {
     }
 
     return matrix->matrixData[p_getBaseX(pos)][p_getBaseY(pos)];
-
 }
 
 void m_insert(Matrix *matrix, Position *pos, void *value) {

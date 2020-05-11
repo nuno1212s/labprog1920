@@ -26,8 +26,6 @@ struct Hit_ {
 
     HitType hitType;
 
-    PieceInBoard *hit;
-
 };
 
 struct SearchingForGame_ {

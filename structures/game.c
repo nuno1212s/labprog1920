@@ -53,7 +53,7 @@ void createDefaultPossiblePieces(int size) {
             lPiece = pieceCount * 0.2,
             weird = pieceCount * 0.1;
 
-    BitMatrix *matrix = createBitMatrix(5, 5, 1);
+    BitMatrix *matrix = createBitMatrix(MATRIX_ROWS, MATRIX_COLS, MATRIX_WORD_SIZE);
 
     m_setBit(matrix, 0, 0, 1);
 
@@ -63,7 +63,7 @@ void createDefaultPossiblePieces(int size) {
         addPossiblePiece(OneBlock);
     }
 
-    BitMatrix *twoBlock = createBitMatrix(5, 5, 1);
+    BitMatrix *twoBlock = createBitMatrix(MATRIX_ROWS, MATRIX_COLS, MATRIX_WORD_SIZE);
 
     m_setBit(twoBlock, 0, 0, 1);
     m_setBit(twoBlock, 0, 1, 1);
@@ -74,7 +74,7 @@ void createDefaultPossiblePieces(int size) {
         addPossiblePiece(TwoBlock);
     }
 
-    BitMatrix *threeBlock = createBitMatrix(5, 5, 1);
+    BitMatrix *threeBlock = createBitMatrix(MATRIX_ROWS, MATRIX_COLS, MATRIX_WORD_SIZE);
 
     m_setBit(threeBlock, 0, 0, 1);
     m_setBit(threeBlock, 0, 1, 1);
@@ -86,7 +86,7 @@ void createDefaultPossiblePieces(int size) {
         addPossiblePiece(ThreePiece);
     }
 
-    BitMatrix *destroyer = createBitMatrix(5, 5, 1);
+    BitMatrix *destroyer = createBitMatrix(MATRIX_ROWS, MATRIX_COLS, MATRIX_WORD_SIZE);
 
     m_setBit(destroyer, 0, 0, 1);
     m_setBit(destroyer, 0, 1, 1);
@@ -98,7 +98,7 @@ void createDefaultPossiblePieces(int size) {
     for (int i = 0; i < fourPiece; i++)
         addPossiblePiece(fourBlock);
 
-    BitMatrix *lThing = createBitMatrix(5, 5, 1);
+    BitMatrix *lThing = createBitMatrix(MATRIX_ROWS, MATRIX_COLS, MATRIX_WORD_SIZE);
 
     m_setBit(lThing, 0, 0, 1);
     m_setBit(lThing, 0, 1, 1);
@@ -112,7 +112,7 @@ void createDefaultPossiblePieces(int size) {
     for (int i = 0; i < lPiece; i++)
         addPossiblePiece(L);
 
-    BitMatrix *twoStripe = createBitMatrix(5, 5, 1);
+    BitMatrix *twoStripe = createBitMatrix(MATRIX_ROWS, MATRIX_COLS, MATRIX_WORD_SIZE);
 
     m_setBit(twoStripe, 0, 0, 1);
     m_setBit(twoStripe, 0, 1, 1);
@@ -190,22 +190,19 @@ void deleteSearchGame(SearchingForGame *game) {
 
 }
 
-static Hit destroyed(PieceInBoard *piece) {
+static Hit destroyed() {
     Hit h;
 
     h.hitType = H_DESTROYED_BOAT;
 
-    h.hit = piece;
-
     return h;
 }
 
-static Hit hit(PieceInBoard *piece) {
+static Hit hit() {
 
     Hit h;
 
     h.hitType = H_HIT_BOAT;
-    h.hit = piece;
 
     return h;
 }
@@ -215,8 +212,6 @@ static Hit missed() {
 
     h.hitType = H_MISSED;
 
-    h.hit = NULL;
-
     return h;
 }
 
@@ -224,7 +219,6 @@ static Hit alreadyHit() {
     Hit h;
 
     h.hitType = H_ALREADY_HIT;
-    h.hit = NULL;
 
     return h;
 }
@@ -242,12 +236,7 @@ Player *getCurrentPlayer(Game *game) {
 
 void goToNextPlayer(Game *game) {
 
-    game->currentPlayerIndex++;
-
-    if (game->currentPlayerIndex >= game->playerCount) {
-        game->currentPlayerIndex = 0;
-    }
-
+    game->currentPlayerIndex = (++game->currentPlayerIndex % game->playerCount);
 }
 
 Hit playAt(Game *g, Player *player, Position *pos) {
@@ -267,6 +256,7 @@ Hit playAt(Game *g, Player *player, Position *pos) {
         Player *p = g->players[i];
 
         res = attemptHit(p->storage, pos);
+
         otherPlayer = p;
     }
 
@@ -284,10 +274,10 @@ Hit playAt(Game *g, Player *player, Position *pos) {
 
             ll_remove(otherPlayer->currentActivePieces, index);
 
-            return destroyed(res.hit);
+            return destroyed();
         }
 
-        return hit(res.hit);
+        return hit();
     } else {
         registerHit(player->storage, pos, 0);
 

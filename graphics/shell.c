@@ -208,7 +208,7 @@ PossiblePieces *readPossiblePieces(int traySize) {
         char pieceName[24];
         int size, x, y;
 
-        BitMatrix *matrix = createBitMatrix(5, 5, 1);
+        BitMatrix *matrix = createBitMatrix(MATRIX_ROWS, MATRIX_COLS, MATRIX_WORD_SIZE);
 
         printf("New piece name (Max of 24 characters): ");
         scanf("%24s", pieceName);

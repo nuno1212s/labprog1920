@@ -49,6 +49,7 @@ struct HitResponse_ {
         HR_ALREADY_HIT
     } hit_type;
 
+    //TODO: Piece
     PieceInBoard *hit;
 
 };
