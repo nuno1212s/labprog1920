@@ -58,7 +58,7 @@ struct Player_ {
 
     GameStorage *storage;
 
-    LinkedList *currentActivePieces;
+    int currentActivePieceCount;
 
 };
 
@@ -81,9 +81,10 @@ void freeGame(Game *);
  *
  * @param name The name of the player. This parameter is duplicated, so it can be safely freed afterwards
  * @param size The size of the game tray
+ * @param isHost Whether this is the local player instance
  * @return
  */
-Player *initPlayer(char *name, int size);
+Player *initPlayer(char *name, int size, int isHost);
 
 Player *getCurrentPlayer(Game *);
 
@@ -94,11 +95,28 @@ PieceInBoard *addPieceChosen(Player *, Position *, Piece *, PlacedDirection);
 int canPlacePiece(Player *, Position *, Piece *, PlacedDirection);
 
 /**
- * Attempt to play in a position
+ * Check whether the player has played in the given position
+ * @return
+ */
+int hasPlayedAt(Player *, Position *);
+
+/**
+ * Register an attempt by the player to play in the given position
+ *
+ * This method will go to the opposite player and check whether the player has hit any boats.
  *
  * @return The result of the play
  */
 Hit playAt(Game *, Player *, Position *);
+
+/**
+ * Register the result of a play made by the player in the given position with given hit type
+ *
+ * This method will store the result of the play in the players storage
+ *
+ * @param type
+ */
+void registerPlayResult(Game *,Player *, Position *, HitType type);
 
 /**
  * Check if the game has finished
@@ -124,6 +142,8 @@ SearchingForGame *initSearchGame(PossiblePieces *, int, Player *);
  * So the player object from this searching game can be safely used in the game object
  */
 void deleteSearchGame(SearchingForGame *);
+
+void setPossiblePieces(PossiblePieces *);
 
 PossiblePieces *initPossiblePieces();
 

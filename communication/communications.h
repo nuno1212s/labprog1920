@@ -5,6 +5,7 @@
 
 typedef enum {
 
+    SAME_SHELL,
     TEXT,
     PIPES,
     NETWORK
@@ -21,26 +22,37 @@ typedef struct {
 
 typedef struct {
 
-    Position *pos;
-
     int playerID;
 
     HitType type;
 
 } HitResult;
 
-void initComms(COMM_TYPE);
+/**
+ * Initialize the comms
+ *
+ * @param host Whether this process is the parent process
+ */
+void initComms(COMM_TYPE, int host);
 
-void sendPossiblePieces(PossiblePieces *);
+int c_readGameSize();
 
-PossiblePieces *receivePossiblePieces();
+void c_writeGameSize(int);
 
-void sendAttemptedPlay(Position *pos, int playerID, int gameID);
+void c_readPlayerInformation(Player *);
 
-Played receiveAttemptedPlay(int gameID);
+void c_sendPlayerInformation(Player *);
 
-HitResult receivedAttemptedPlayResult(int gameID);
+void c_sendPossiblePieces(PossiblePieces *);
 
-void respondToAttemptedPlay(Position *pos, int playerID, int hit, int gameID);
+PossiblePieces *c_receivePossiblePieces();
+
+void c_sendAttemptedPlay(Position *pos, int playerID, int gameID);
+
+Played c_receiveAttemptedPlay(int gameID);
+
+void c_respondToAttemptedPlay(int playerID, HitType hit, int gameID);
+
+HitResult c_receivedAttemptedPlayResult(int gameID);
 
 #endif //LABPROG_COMMUNICATIONS_H

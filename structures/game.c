@@ -9,14 +9,26 @@
 
 static PossiblePieces *possiblePieces = NULL;
 
+static void clearPossiblePieces() {
+    ll_forEach(possiblePieces->piecesList, (void (*)(void *)) gs_freePiece);
+
+    ll_free(possiblePieces->piecesList);
+
+    free(possiblePieces);
+}
+
+void setPossiblePieces(PossiblePieces *pieces) {
+    if (pieces != NULL) {
+        clearPossiblePieces();
+    }
+
+    possiblePieces = pieces;
+}
+
 PossiblePieces *initPossiblePieces() {
 
     if (possiblePieces != NULL) {
-        ll_forEach(possiblePieces->piecesList, (void (*)(void *)) gs_freePiece);
-
-        ll_free(possiblePieces->piecesList);
-
-        free(possiblePieces);
+        clearPossiblePieces();
     }
 
     possiblePieces = malloc(sizeof(PossiblePieces));
@@ -127,7 +139,7 @@ void createDefaultPossiblePieces(int size) {
 
     Piece *weirdPiece = initPiece(10, "Weird", twoStripe);
 
-    for (int i = 0; i < weird; i ++)
+    for (int i = 0; i < weird; i++)
         addPossiblePiece(weirdPiece);
 }
 
@@ -136,9 +148,7 @@ int getPossiblePiece() {
 }
 
 void addPossiblePiece(Piece *piece) {
-
     ll_addLast(piece, getPossiblePieces()->piecesList);
-
 }
 
 Game *initGame(int players, int size, Player **player) {
@@ -153,6 +163,10 @@ Game *initGame(int players, int size, Player **player) {
     game->players = player;
 
     game->currentPlayerIndex = rand() % players;
+
+    for (int i = 0; i < players; i++) {
+        player[i]->currentActivePieceCount = getPossiblePiece();
+    }
 
     return game;
 }
@@ -239,11 +253,13 @@ void goToNextPlayer(Game *game) {
     game->currentPlayerIndex = (++game->currentPlayerIndex % game->playerCount);
 }
 
-Hit playAt(Game *g, Player *player, Position *pos) {
+int hasPlayedAt(Player *player, Position *pos) {
 
-    if (hasPlayed(player->storage, pos)) {
-        return alreadyHit();
-    }
+    return hasPlayed(player->storage, pos);
+
+}
+
+Hit playAt(Game *g, Player *player, Position *pos) {
 
     HitResponse res;
 
@@ -266,25 +282,36 @@ Hit playAt(Game *g, Player *player, Position *pos) {
     }
 
     if (res.hit_type == HR_HIT_BOAT) {
-        registerHit(player->storage, pos, 1);
-
         if (hasBeenDestroyed(otherPlayer->storage, res.hit)) {
-
-            int index = ll_indexOf(otherPlayer->currentActivePieces, res.hit);
-
-            ll_remove(otherPlayer->currentActivePieces, index);
-
             return destroyed();
         }
 
         return hit();
     } else {
-        registerHit(player->storage, pos, 0);
-
         goToNextPlayer(g);
 
         return missed();
     }
+
+}
+
+void registerPlayResult(Game *game, Player *player, Position *position, HitType type) {
+
+    int result;
+
+    switch (type) {
+        case H_HIT_BOAT:
+        case H_DESTROYED_BOAT:
+            result = 1;
+            break;
+        default:
+            result = 0;
+
+            goToNextPlayer(game);
+            break;
+    }
+
+    registerHit(player->storage, position, result);
 
 }
 
@@ -296,7 +323,7 @@ int hasFinished(Game *g) {
 
         Player *p = g->players[i];
 
-        if (ll_size(p->currentActivePieces) == 0) {
+        if (p->currentActivePieceCount == 0) {
             //If the player has no active pieces, then the other player has won
 
             playerThatLost = i;
@@ -312,15 +339,23 @@ int hasFinished(Game *g) {
 }
 //(13, 1) (12, 1) (11, 1)
 
-Player *initPlayer(char *name, int size) {
+Player *initPlayer(char *name, int size, int isHost) {
 
     Player *player = malloc(sizeof(Player));
 
-    player->name = strdup(name);
+    if (name != NULL) {
+        player->name = strdup(name);
+    } else {
+        player->name = NULL;
+    }
 
-    player->storage = initGameStorage(size, size > MATRIX_THRESHOLD ? GS_QUAD : GS_MATRIX);
+    if (isHost) {
+        player->storage = initGameStorage(size, size > MATRIX_THRESHOLD ? GS_QUAD : GS_MATRIX);
+    } else {
+        player->storage = NULL;
+    }
 
-    player->currentActivePieces = ll_initList();
+    player->currentActivePieceCount = 0;
 
     return player;
 }
@@ -332,10 +367,6 @@ PieceInBoard *addPieceChosen(Player *player, Position *position, Piece *piece, P
     if (canPlacePiece(player, position, piece, dir)) {
 
         PieceInBoard *board = insertPiece(storage, piece, position, dir);
-
-        if (board != NULL) {
-            ll_addLast(board, player->currentActivePieces);
-        }
 
         return board;
     } else {

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "../storagestructures/bitmap.h"
 #include "../storagestructures/linkedlist.h"
 
@@ -19,9 +20,14 @@ static void txt_writePiece(Piece*);
 static Piece * readPiece(Piece*);
 static BitMatrix *readMatrix();
 
-static void initFP() {
-
-    fp = fopen(TEXT_FILE, "w+");
+static void initFP(int host) {
+    if (host) {
+        //If we are the host, reset the file.
+        fp = fopen(TEXT_FILE, "w+");
+    } else {
+        //If we are not the host, just open the file as it is.
+        fp = fopen(TEXT_FILE, "r+");
+    }
 
     if (fp == NULL) {
         fprintf(stderr, "Failed to open the text file %s\n", TEXT_FILE);
@@ -30,8 +36,12 @@ static void initFP() {
     }
 }
 
-void txt_init() {
-    initFP();
+void txt_flush() {
+    fflush(fp);
+}
+
+void txt_init(int host) {
+    initFP(host);
 }
 
 void txt_writePossiblePieces(PossiblePieces *pieces) {
@@ -56,9 +66,28 @@ void txt_writePossiblePieces(PossiblePieces *pieces) {
         node = node->next;
     }
 
+    txt_flush();
 }
 
-void txt_writePiece(Piece *piece) {
+void txt_sendPlayerInformation(Player *player) {
+
+    fprintf(fp, "%s\n", player->name);
+
+}
+
+void txt_readPlayerInformation(Player *player) {
+
+    if (fgets(BUFFER, BUFFER_SIZE, fp) == 0) {
+
+        perror("FAILED TO READ PLAYER INFO.");
+
+        exit(1);
+    }
+
+    player->name = strdup(BUFFER);
+}
+
+static void txt_writePiece(Piece *piece) {
 
     fprintf(fp, "PIECE\n%s-%d\n", piece->name, piece->size);
 
@@ -70,11 +99,12 @@ void txt_writePiece(Piece *piece) {
 
         }
     }
+
     fprintf(fp, "\n");
 
 }
 
-void txt_repeatPiece() {
+static void txt_repeatPiece() {
     fprintf(fp, "REPEAT\n");
 }
 
@@ -82,7 +112,11 @@ PossiblePieces *txt_readPossiblePieces() {
 
     PossiblePieces *pieces = malloc(sizeof(PossiblePieces));
 
-    fgets(BUFFER, BUFFER_SIZE, fp);
+    if (fgets(BUFFER, BUFFER_SIZE, fp) == 0) {
+        perror("FAILED TO READ POSSIBLE PIECES.");
+
+        exit(1);
+    }
 
     long pieceCount = strtol(BUFFER, NULL, 10);
 
@@ -100,9 +134,13 @@ PossiblePieces *txt_readPossiblePieces() {
     return pieces;
 }
 
-Piece *readPiece(Piece *prev) {
+static Piece *readPiece(Piece *prev) {
 
-    fgets(BUFFER, BUFFER_SIZE, fp);
+    if (fgets(BUFFER, BUFFER_SIZE, fp) == 0) {
+        perror("FAILED TO READ PIECE.");
+
+        exit(1);
+    }
 
     if (strcmp(BUFFER, "PIECE") == 0) {
 
@@ -135,11 +173,15 @@ Piece *readPiece(Piece *prev) {
     return NULL;
 }
 
-BitMatrix *readMatrix() {
+static BitMatrix *readMatrix() {
 
     BitMatrix *matrix = createBitMatrix(MATRIX_ROWS, MATRIX_COLS, MATRIX_WORD_SIZE);
 
-    fgets(BUFFER, BUFFER_SIZE, fp);
+    if (fgets(BUFFER, BUFFER_SIZE, fp) == 0) {
+        perror("FAILED TO READ MATRIX.");
+
+        exit(1);
+    }
 
     char *current = strtok(BUFFER, " ");
 
@@ -159,13 +201,19 @@ BitMatrix *readMatrix() {
 
 void txt_sendAttemptedPlay(Position *pos, int playerID, int gameID) {
     fprintf(fp, "%d %d %d %d\n", pos->x, pos->y, playerID, gameID);
+
+    txt_flush();
 }
 
 Played txt_receiveAttemptedPlay(int game) {
 
     Played p;
 
-    fgets(BUFFER, BUFFER_SIZE, fp);
+    if (fgets(BUFFER, BUFFER_SIZE, fp) == 0) {
+        perror("FAILED TO READ ATTEMPTED PLAY.");
+
+        exit(1);
+    }
 
     int x, y, playerID, gameID;
 
@@ -200,10 +248,11 @@ Played txt_receiveAttemptedPlay(int game) {
     return p;
 }
 
-void txt_respondToAttemptedPlay(Position *pos, int playerID, int hit, int gameID) {
+void txt_respondToAttemptedPlay(int playerID, HitType hit, int gameID) {
 
-    fprintf(fp, "%d %d %d %d %d\n", p_getBaseX(pos), p_getBaseY(pos), playerID, hit, gameID);
+    fprintf(fp, "%d %d %d\n", playerID, hit, gameID);
 
+    txt_flush();
 }
 
 HitResult txt_receivedAttemptedPlayResult(int gameID) {
@@ -211,14 +260,6 @@ HitResult txt_receivedAttemptedPlayResult(int gameID) {
     fgets(BUFFER, BUFFER_SIZE, fp);
 
     char *ptr = strtok(BUFFER, " ");
-
-    int x = (int) strtol(ptr, NULL, 10);
-
-    ptr = strtok(NULL, " ");
-
-    int y = (int) strtol(ptr, NULL, 10);
-
-    ptr = strtok(NULL, " ");
 
     int playerID = (int) strtol(ptr, NULL, 10);
 
@@ -239,7 +280,6 @@ HitResult txt_receivedAttemptedPlayResult(int gameID) {
     HitResult result;
 
     result.playerID = playerID;
-    result.pos = initPos(x, y);
     result.type = hit;
 
     return result;

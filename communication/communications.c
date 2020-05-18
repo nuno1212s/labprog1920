@@ -1,19 +1,38 @@
 #include "communications.h"
 #include "text.h"
+#include "sem.h"
 
 static COMM_TYPE type;
 
-void initComms(COMM_TYPE commType) {
+void initComms(COMM_TYPE commType, int host) {
     type = commType;
 
     switch (type) {
         case TEXT:
-            txt_init();
+            txt_init(host);
             break;
     }
 }
 
-void sendPossiblePieces(PossiblePieces *pieces) {
+int c_readGameSize() {
+
+    switch (type) {
+        case TEXT:
+            return txt_readGameSize();
+    }
+
+}
+
+void c_writeGameSize(int size) {
+    switch (type) {
+        case TEXT:
+            txt_sendGameSize(size);
+            break;
+    }
+
+}
+
+void c_sendPossiblePieces(PossiblePieces *pieces) {
 
     switch (type) {
 
@@ -24,7 +43,30 @@ void sendPossiblePieces(PossiblePieces *pieces) {
 
 }
 
-PossiblePieces *receivePossiblePieces() {
+void c_readPlayerInformation(Player *player) {
+
+    switch (type) {
+
+        case TEXT:
+            txt_readPlayerInformation(player);
+            break;
+    }
+
+}
+
+void c_sendPlayerInformation(Player *player) {
+
+    switch (type) {
+
+        case TEXT:
+            txt_sendPlayerInformation(player);
+            break;
+
+    }
+
+}
+
+PossiblePieces *c_receivePossiblePieces() {
 
     switch (type) {
 
@@ -32,10 +74,10 @@ PossiblePieces *receivePossiblePieces() {
          return txt_readPossiblePieces();
 
     }
-
 }
 
-void sendAttemptedPlay(Position *pos, int playerID, int gameID) {
+void c_sendAttemptedPlay(Position *pos, int playerID, int gameID) {
+
 
     switch (type) {
 
@@ -46,7 +88,7 @@ void sendAttemptedPlay(Position *pos, int playerID, int gameID) {
 
 }
 
-Played receiveAttemptedPlay(int gameID) {
+Played c_receiveAttemptedPlay(int gameID) {
     switch (type) {
 
         case TEXT:
@@ -55,7 +97,7 @@ Played receiveAttemptedPlay(int gameID) {
     }
 }
 
-HitResult receivedAttemptedPlayResult(int gameID) {
+HitResult c_receivedAttemptedPlayResult(int gameID) {
 
     switch (type) {
         case TEXT:
@@ -64,11 +106,12 @@ HitResult receivedAttemptedPlayResult(int gameID) {
 
 }
 
-void respondToAttemptedPlay(Position *pos, int playerID, int hit, int gameID) {
+void c_respondToAttemptedPlay(int playerID, HitType hit, int gameID) {
 
     switch (type) {
         case TEXT:
-            txt_respondToAttemptedPlay(pos, playerID, hit, gameID);
+            txt_respondToAttemptedPlay(playerID, hit, gameID);
+            break;
     }
 
 }

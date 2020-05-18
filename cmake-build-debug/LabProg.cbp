@@ -84,10 +84,28 @@
 		<Unit filename="/home/nuno/CLionProjects/labprog1920/communication/communications.h">
 			<Option target="LabProg"/>
 		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/labprog1920/communication/same_shell.c">
+			<Option target="LabProg"/>
+		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/labprog1920/communication/same_shell.h">
+			<Option target="LabProg"/>
+		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/labprog1920/communication/sem.c">
+			<Option target="LabProg"/>
+		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/labprog1920/communication/sem.h">
+			<Option target="LabProg"/>
+		</Unit>
 		<Unit filename="/home/nuno/CLionProjects/labprog1920/communication/text.c">
 			<Option target="LabProg"/>
 		</Unit>
 		<Unit filename="/home/nuno/CLionProjects/labprog1920/communication/text.h">
+			<Option target="LabProg"/>
+		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/labprog1920/gameplay.c">
+			<Option target="LabProg"/>
+		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/labprog1920/gameplay.h">
 			<Option target="LabProg"/>
 		</Unit>
 		<Unit filename="/home/nuno/CLionProjects/labprog1920/graphics/graphics.c">
@@ -100,6 +118,12 @@
 			<Option target="LabProg"/>
 		</Unit>
 		<Unit filename="/home/nuno/CLionProjects/labprog1920/graphics/shell.h">
+			<Option target="LabProg"/>
+		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/labprog1920/graphics/shell2_0.c">
+			<Option target="LabProg"/>
+		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/labprog1920/graphics/shell2_0.h">
 			<Option target="LabProg"/>
 		</Unit>
 		<Unit filename="/home/nuno/CLionProjects/labprog1920/main.c">

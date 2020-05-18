@@ -3,6 +3,7 @@
 
 #include "../structures/gamestructures.h"
 #include "../structures/game.h"
+#include "../gameplay.h"
 
 typedef enum {
     SHELL
@@ -13,12 +14,22 @@ typedef enum {
  */
 void initGraphics(GRAPHICS);
 
-/**
- * Display the menu of the game
- * @return The game object of the game
- */
-Game* displayMenu();
+GAME_TYPE g_readGameType();
 
-void displayGame(Game *);
+PossiblePieces* g_readPossiblePieces();
+
+int g_readGameSize();
+
+char *g_readPlayerName();
+
+Position *g_readPosition();
+
+void g_alreadyPlayedThere();
+
+void g_missed();
+
+void g_hitBoat();
+
+void g_destroyedBoat();
 
 #endif //LABPROG_GRAPHICS_H
