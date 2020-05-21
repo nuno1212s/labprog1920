@@ -115,13 +115,24 @@ void placePieces(Game *game, Player *player) {
 
     int pieceCount = getPossiblePiecesCount(game->p);
 
-    int hasBeenPlaced[pieceCount];
+    PieceInBoard *hasBeenPlaced[pieceCount];
 
-    while (player->currentActivePieceCount < pieceCount) {
+    while (1) {
 
         g_showPlaceablePieces(player, game->p, hasBeenPlaced);
 
-        int pieceID = g_requestPieceToPlay();
+        int pieceID = g_requestPieceToPlay(pieceCount);
+
+        if (pieceID == -1) {
+            if (player->currentActivePieceCount < getPossiblePiecesCount(game->p)) {
+
+                randomizePiecesLeft(player, game->size, (PieceInBoard **) hasBeenPlaced, game->p);
+
+                continue;
+            }
+
+            break;
+        }
 
         Piece *piece = getPieceWithId(pieceID);
 
@@ -137,7 +148,7 @@ void placePieces(Game *game, Player *player) {
             p_free(pos);
             g_showPiecePlaced(piece, pos);
 
-            hasBeenPlaced[pieceID] = 1;
+            hasBeenPlaced[pieceID] = piecePlaced;
         }
     }
 
@@ -151,6 +162,8 @@ void runGame(Game *game) {
         if (game->currentPlayerIndex == playerID) {
 
             Player *playerData = getCurrentPlayer(game);
+
+            g_showYourTurn(playerData);
 
             Position *toPlayAt = g_readPosition();
 
@@ -173,6 +186,10 @@ void runGame(Game *game) {
                 exit(1);
             }
 
+            registerPlayResult(game, playerData, toPlayAt, result.type);
+
+            p_free(toPlayAt);
+
             switch (result.type) {
 
                 case H_ALREADY_HIT:
@@ -189,12 +206,10 @@ void runGame(Game *game) {
                     break;
 
             }
-
-            registerPlayResult(game, playerData, toPlayAt, result.type);
-
-            p_free(toPlayAt);
-
         } else {
+            Player *current = getCurrentPlayer(game);
+
+            g_showOtherTurn(current);
 
             Played played = c_receiveAttemptedPlay(game->gameID);
 
@@ -204,12 +219,9 @@ void runGame(Game *game) {
                 exit(1);
             }
 
-            Player *current = getCurrentPlayer(game);
-
             Hit result = playAt(game, current, played.pos);
 
             c_respondToAttemptedPlay(played.playerID, result.hitType, game->gameID);
-
         }
 
     }

@@ -2,8 +2,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 static void showPlayerTray(Player *player);
+
+
 
 int sh_readGameSize() {
     system("clear");
@@ -56,25 +59,111 @@ void sh_alreadyPlayedThere() {
 
     printf("You have already played in this position!\n");
 
+    sleep(2);
 }
 
 void sh_missed() {
 
     printf("Your shot has not hit any boats.\n");
 
+    sleep(2);
 }
 
 void sh_hitBoat() {
 
     printf("Your shot has hit a boat!\n");
 
+    sleep(2);
+
 }
 
 void sh_destroyedBoat() {
-    printf("Your shot has destroyde a boat!\n");
+    printf("Your shot has destroyed a boat!\n");
+
+    sleep(2);
 }
 
-void sh_showPlaceablePieces(Player *game, PossiblePieces *piece, int *placed) {
+void showPlayerTray(Player *player) {
+
+    GameStorage *storage = player->storage;
+
+    int size = player->storage->size;
+
+    void *(*get)(void *, Position *) = NULL;
+
+    void *storageP = NULL;
+
+    switch (storage->type) {
+        case GS_QUAD:
+            get = (void *(*)(void *, Position *)) qt_lookup;
+            storageP = storage->data.quadTree;
+            break;
+        case GS_MATRIX:
+            get = (void *(*)(void *, Position *)) m_lookup;
+            storageP = storage->data.matrix;
+            break;
+    }
+
+
+    for (int i = 0; i < size; i++) {
+        printf("%d ", i);
+    }
+
+    printf("\n");
+
+    for (int row = size; row >= 0; row--) {
+
+        for (int i = 0; i < size; i++) {
+            printf("--");
+        }
+
+        printf("\n");
+
+        for (int column = 0; column < size; column++) {
+
+            Position p = {column, row};
+
+            printf("|");
+
+            void *result = get(storageP, &p);
+
+            if (result == NULL) {
+                printf(".");
+            } else {
+
+                PointStorage *ps = (PointStorage *) result;
+
+                if (ps->piece != NULL) {
+                    printf("#");
+                }
+
+                if (ps->ownHitPoint != NULL) {
+                    if (ps->ownHitPoint->hit) {
+                        printf("*");
+                    } else {
+                        printf("+");
+                    }
+                }
+
+                if (ps->opponentHitPoint != NULL) {
+                    if (ps->opponentHitPoint->hit) {
+                        printf("*");
+                    } else {
+                        printf("=");
+                    }
+                }
+            }
+        }
+
+        printf("|\n");
+    }
+
+    printf("# - Your boat, * - Opponent Hit, = - Opponent Miss, # - My Hit, + - My miss\n");
+}
+
+void sh_showPlaceablePieces(Player *game, PossiblePieces *piece, PieceInBoard **placed) {
+
+    system("clear");
 
     showPlayerTray(game);
 
@@ -86,23 +175,92 @@ void sh_showPlaceablePieces(Player *game, PossiblePieces *piece, int *placed) {
 
         printf("%d) %s", i, game->name);
 
-        if (placed[i]) {
+        if (placed[i] != NULL) {
             placedPieces++;
             printf(" - (Placed)\n");
         } else {
             printf("\n");
         }
+    }
 
+    if (placedPieces == pieceCount) {
+        printf("-1) Move to next phase.\n");
+    } else {
+        printf("-1) Randomize remaining pieces.\n");
+    }
+}
+
+void sh_showNotPossibleToPlace(Piece *piece, Position *pos) {
+
+    printf("You cannot place the piece %s in the postion (%d, %d).\n", piece->name, p_getBaseX(pos), p_getBaseY(pos));
+
+    sleep(2);
+}
+
+void sh_showPiecePlaced(Piece *piece, Position *pos) {
+
+    printf("The piece %s has been placed in the position (%d, %d)\n" , piece->name, p_getBaseX(pos), p_getBaseY(pos));
+
+    sleep(2);
+}
+
+void sh_showAllPlaced() {
+
+}
+
+int sh_requestPieceToPlay(int maxSize) {
+
+    int piece;
+
+    scanf("%d", &piece);
+
+    if (piece < -1 || piece > maxSize) {
+
+        printf("That number is not valid\n");
+
+        return sh_requestPieceToPlay(maxSize);
+    }
+
+    return piece;
+
+}
+
+PlacedDirection sh_readPlaceDirection() {
+
+    printf("Insert your desired rotation (0, 90, 180, 270):\n");
+
+    int rotation = 0;
+
+    scanf("%d", &rotation);
+
+    switch (rotation) {
+        case 0:
+            return P_UP;
+        case 90:
+            return P_LEFT;
+        case 180:
+            return P_DOWN;
+        case 270:
+            return P_RIGHT;
+        default:
+            printf("That is not a valid rotation\n");
+
+            return sh_readPlaceDirection();
     }
 
 }
 
-void sh_showNotPossibleToPlace(Piece *, Position *);
+void sh_showYourTurn(Player *player) {
+    showPlayerTray(player);
 
-void sh_showPiecePlaced(Piece *, Position *);
+    printf("It's your turn to play, %s\n", player->name);
+    printf("Choose where you want to play!\n");
+}
 
-void sh_showAllPlaced();
+void sh_showOtherTurn(Player *player) {
+    showPlayerTray(player);
 
-int sh_requestPieceToPlay();
+    printf("It's %s's turn to play.\n", player->name);
 
-PlacedDirection sh_readPlaceDirection();
+    printf("Wait for his move.\n");
+}

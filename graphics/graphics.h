@@ -16,7 +16,7 @@ void initGraphics(GRAPHICS);
 
 GAME_TYPE g_readGameType();
 
-PossiblePieces* g_readPossiblePieces();
+PossiblePieces* g_readPossiblePieces(Game *);
 
 int g_readGameSize();
 
@@ -32,7 +32,7 @@ void g_hitBoat();
 
 void g_destroyedBoat();
 
-void g_showPlaceablePieces(Player *, PossiblePieces *, int *placed);
+void g_showPlaceablePieces(Player *, PossiblePieces *, PieceInBoard **placed);
 
 void g_showNotPossibleToPlace(Piece *, Position *);
 
@@ -40,8 +40,12 @@ void g_showPiecePlaced(Piece *, Position *);
 
 void g_showAllPlaced();
 
-int g_requestPieceToPlay();
+int g_requestPieceToPlay(int maxSize);
 
 PlacedDirection g_readPlaceDirection();
+
+void g_showYourTurn(Player*player);
+
+void g_showOtherTurn(Player *player);
 
 #endif //LABPROG_GRAPHICS_H
