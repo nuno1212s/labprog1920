@@ -32,4 +32,16 @@ void g_hitBoat();
 
 void g_destroyedBoat();
 
+void g_showPlaceablePieces(Player *, PossiblePieces *, int *placed);
+
+void g_showNotPossibleToPlace(Piece *, Position *);
+
+void g_showPiecePlaced(Piece *, Position *);
+
+void g_showAllPlaced();
+
+int g_requestPieceToPlay();
+
+PlacedDirection g_readPlaceDirection();
+
 #endif //LABPROG_GRAPHICS_H

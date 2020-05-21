@@ -7,149 +7,6 @@
 
 #define MATRIX_THRESHOLD 10
 
-static PossiblePieces *possiblePieces = NULL;
-
-static void clearPossiblePieces() {
-    ll_forEach(possiblePieces->piecesList, (void (*)(void *)) gs_freePiece);
-
-    ll_free(possiblePieces->piecesList);
-
-    free(possiblePieces);
-}
-
-void setPossiblePieces(PossiblePieces *pieces) {
-    if (pieces != NULL) {
-        clearPossiblePieces();
-    }
-
-    possiblePieces = pieces;
-}
-
-PossiblePieces *initPossiblePieces() {
-
-    if (possiblePieces != NULL) {
-        clearPossiblePieces();
-    }
-
-    possiblePieces = malloc(sizeof(PossiblePieces));
-
-    possiblePieces->piecesList = ll_initList();
-
-    return possiblePieces;
-}
-
-PossiblePieces *getPossiblePieces() {
-
-    if (possiblePieces == NULL) {
-        initPossiblePieces();
-
-        createDefaultPossiblePieces(20);
-
-        return possiblePieces;
-
-    }
-
-    return possiblePieces;
-}
-
-void createDefaultPossiblePieces(int size) {
-
-    initPossiblePieces();
-
-    int pieceCount = (size * size) / 25;
-
-    int onePiece = pieceCount * 0.1,
-            twoPieces = pieceCount * 0.2,
-            threePieces = pieceCount * 0.2,
-            fourPiece = pieceCount * 0.2,
-            lPiece = pieceCount * 0.2,
-            weird = pieceCount * 0.1;
-
-    BitMatrix *matrix = createBitMatrix(MATRIX_ROWS, MATRIX_COLS, MATRIX_WORD_SIZE);
-
-    m_setBit(matrix, 0, 0, 1);
-
-    Piece *OneBlock = initPiece(1, "One block", matrix);
-
-    for (int i = 0; i < onePiece; i++) {
-        addPossiblePiece(OneBlock);
-    }
-
-    BitMatrix *twoBlock = createBitMatrix(MATRIX_ROWS, MATRIX_COLS, MATRIX_WORD_SIZE);
-
-    m_setBit(twoBlock, 0, 0, 1);
-    m_setBit(twoBlock, 0, 1, 1);
-
-    Piece *TwoBlock = initPiece(2, "Two blocks", twoBlock);
-
-    for (int i = 0; i < twoPieces; i++) {
-        addPossiblePiece(TwoBlock);
-    }
-
-    BitMatrix *threeBlock = createBitMatrix(MATRIX_ROWS, MATRIX_COLS, MATRIX_WORD_SIZE);
-
-    m_setBit(threeBlock, 0, 0, 1);
-    m_setBit(threeBlock, 0, 1, 1);
-    m_setBit(threeBlock, 0, 2, 1);
-
-    Piece *ThreePiece = initPiece(3, "Three blocks", threeBlock);
-
-    for (int i = 0; i < threePieces; i++) {
-        addPossiblePiece(ThreePiece);
-    }
-
-    BitMatrix *destroyer = createBitMatrix(MATRIX_ROWS, MATRIX_COLS, MATRIX_WORD_SIZE);
-
-    m_setBit(destroyer, 0, 0, 1);
-    m_setBit(destroyer, 0, 1, 1);
-    m_setBit(destroyer, 0, 2, 1);
-    m_setBit(destroyer, 0, 3, 1);
-
-    Piece *fourBlock = initPiece(4, "Destroyer", destroyer);
-
-    for (int i = 0; i < fourPiece; i++)
-        addPossiblePiece(fourBlock);
-
-    BitMatrix *lThing = createBitMatrix(MATRIX_ROWS, MATRIX_COLS, MATRIX_WORD_SIZE);
-
-    m_setBit(lThing, 0, 0, 1);
-    m_setBit(lThing, 0, 1, 1);
-    m_setBit(lThing, 0, 2, 1);
-    m_setBit(lThing, 0, 3, 1);
-    m_setBit(lThing, 1, 0, 1);
-    m_setBit(lThing, 2, 0, 1);
-
-    Piece *L = initPiece(6, "L", lThing);
-
-    for (int i = 0; i < lPiece; i++)
-        addPossiblePiece(L);
-
-    BitMatrix *twoStripe = createBitMatrix(MATRIX_ROWS, MATRIX_COLS, MATRIX_WORD_SIZE);
-
-    m_setBit(twoStripe, 0, 0, 1);
-    m_setBit(twoStripe, 0, 1, 1);
-    m_setBit(twoStripe, 0, 2, 1);
-    m_setBit(twoStripe, 0, 3, 1);
-    m_setBit(twoStripe, 1, 0, 1);
-    m_setBit(twoStripe, 1, 1, 1);
-    m_setBit(twoStripe, 1, 2, 1);
-    m_setBit(twoStripe, 1, 3, 1);
-    m_setBit(twoStripe, 2, 0, 1);
-    m_setBit(twoStripe, 3, 0, 1);
-
-    Piece *weirdPiece = initPiece(10, "Weird", twoStripe);
-
-    for (int i = 0; i < weird; i++)
-        addPossiblePiece(weirdPiece);
-}
-
-int getPossiblePiece() {
-    return possiblePieces == NULL ? 0 : ll_size(possiblePieces->piecesList);
-}
-
-void addPossiblePiece(Piece *piece) {
-    ll_addLast(piece, getPossiblePieces()->piecesList);
-}
 
 Game *initGame(int players, int size, Player **player) {
 
@@ -163,10 +20,6 @@ Game *initGame(int players, int size, Player **player) {
     game->players = player;
 
     game->currentPlayerIndex = rand() % players;
-
-    for (int i = 0; i < players; i++) {
-        player[i]->currentActivePieceCount = getPossiblePiece();
-    }
 
     return game;
 }
@@ -367,6 +220,8 @@ PieceInBoard *addPieceChosen(Player *player, Position *position, Piece *piece, P
     if (canPlacePiece(player, position, piece, dir)) {
 
         PieceInBoard *board = insertPiece(storage, piece, position, dir);
+
+        player->currentActivePieceCount++;
 
         return board;
     } else {

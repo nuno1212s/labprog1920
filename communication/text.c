@@ -108,9 +108,11 @@ static void txt_repeatPiece() {
     fprintf(fp, "REPEAT\n");
 }
 
-PossiblePieces *txt_readPossiblePieces() {
+PossiblePieces *txt_readPossiblePieces(Game *game) {
 
-    PossiblePieces *pieces = malloc(sizeof(PossiblePieces));
+
+
+    PossiblePieces *pieces = initPossiblePieces(game);
 
     if (fgets(BUFFER, BUFFER_SIZE, fp) == 0) {
         perror("FAILED TO READ POSSIBLE PIECES.");

@@ -16,7 +16,7 @@ void txt_sendPlayerInformation(Player *);
 
 void txt_writePossiblePieces(PossiblePieces *);
 
-PossiblePieces * txt_readPossiblePieces();
+PossiblePieces * txt_readPossiblePieces(Game *g);
 
 void txt_sendAttemptedPlay(Position *, int, int);
 

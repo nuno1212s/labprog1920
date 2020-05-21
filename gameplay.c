@@ -11,11 +11,11 @@ static int playerID;
 
 static int isHost;
 
-static void readPieces();
+static PossiblePieces *readPieces(Game *g);
 
 static void runGame(Game *);
 
-static void placePieces(Game *);
+static void placePieces(Game *, Player *);
 
 void startGame(int host) {
 
@@ -23,7 +23,7 @@ void startGame(int host) {
 
     int traySize;
 
-    char *player0Name, *player1Name;
+    char *playerName;
 
     Player *player0, *player1;
 
@@ -51,9 +51,9 @@ void startGame(int host) {
 
         traySize = g_readGameSize();
 
-        player0Name = g_readPlayerName();
+        playerName = g_readPlayerName();
 
-        player0 = initPlayer(player0Name, traySize, 1);
+        player0 = initPlayer(playerName, traySize, 1);
 
         c_sendPlayerInformation(player0);
 
@@ -71,43 +71,77 @@ void startGame(int host) {
 
         c_readPlayerInformation(player0);
 
-        player1Name = g_readPlayerName();
+        playerName = g_readPlayerName();
 
-        player1 = initPlayer(player1Name, traySize, 1);
+        player1 = initPlayer(playerName, traySize, 1);
 
         c_sendPlayerInformation(player1);
     }
 
+    free(playerName);
+
     players[0] = player0;
     players[1] = player1;
 
-    readPieces();
-
     Game *game = initGame(PLAYER_COUNT, traySize, players);
 
-    placePieces(game);
+    PossiblePieces *pieces = readPieces(game);
+
+    placePieces(game, host ? player0 : player1);
 
     runGame(game);
 
     freeGame(game);
 }
 
-void readPieces() {
+PossiblePieces *readPieces(Game *game) {
 
     if (isHost) {
 
-        PossiblePieces *pieces = g_readPossiblePieces();
-
-        setPossiblePieces(pieces);
+        PossiblePieces *pieces = g_readPossiblePieces(game);
 
         c_sendPossiblePieces(pieces);
 
+        return pieces;
     } else {
-        PossiblePieces *pieces = c_receivePossiblePieces();
+        PossiblePieces *pieces = c_receivePossiblePieces(game);
 
-        setPossiblePieces(pieces);
+        return pieces;
     }
 
+}
+
+void placePieces(Game *game, Player *player) {
+
+    int pieceCount = getPossiblePiecesCount(game->p);
+
+    int hasBeenPlaced[pieceCount];
+
+    while (player->currentActivePieceCount < pieceCount) {
+
+        g_showPlaceablePieces(player, game->p, hasBeenPlaced);
+
+        int pieceID = g_requestPieceToPlay();
+
+        Piece *piece = getPieceWithId(pieceID);
+
+        Position *pos = g_readPosition();
+
+        PlacedDirection dir = g_readPlaceDirection();
+
+        PieceInBoard *piecePlaced = addPieceChosen(player, pos, piece, dir);
+
+        if (piecePlaced == NULL) {
+            g_showNotPossibleToPlace(piece, pos);
+        } else {
+            p_free(pos);
+            g_showPiecePlaced(piece, pos);
+
+            hasBeenPlaced[pieceID] = 1;
+        }
+    }
+
+    c_waitForOtherPlayerToChoosePieces();
 }
 
 void runGame(Game *game) {

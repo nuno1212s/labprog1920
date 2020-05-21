@@ -66,12 +66,12 @@ void c_sendPlayerInformation(Player *player) {
 
 }
 
-PossiblePieces *c_receivePossiblePieces() {
+PossiblePieces *c_receivePossiblePieces(Game *game) {
 
     switch (type) {
 
         case TEXT:
-         return txt_readPossiblePieces();
+         return txt_readPossiblePieces(game);
 
     }
 }

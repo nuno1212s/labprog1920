@@ -4,16 +4,15 @@
 #include "position.h"
 #include "gamestructures.h"
 #include "../storagestructures/linkedlist.h"
+#include "gamepieces.h"
 
 #define g_gameID(g) (g->gameID)
 #define g_gameSize(g) (g->size)
 #define g_currentPlayer(g) (g->currentPlayerIndex)
 
-struct PossiblePieces_ {
-
-    LinkedList *piecesList;
-
-};
+#define MIN_GAME_SIZE 20
+#define MAX_GAME_SIZE 40
+#define MAX_PLAYER_NAME_SIZE 24
 
 typedef enum {
     H_DESTROYED_BOAT,
@@ -50,6 +49,8 @@ struct Game_ {
 
     int currentPlayerIndex;
 
+    PossiblePieces *p;
+
 };
 
 struct Player_ {
@@ -62,7 +63,6 @@ struct Player_ {
 
 };
 
-typedef struct PossiblePieces_ PossiblePieces;
 
 typedef struct Player_ Player;
 
@@ -72,7 +72,16 @@ typedef struct SearchingForGame_ SearchingForGame;
 
 typedef struct Hit_ Hit;
 
-Game *initGame(int, int, Player **);
+
+/**
+ * Initialize a game instance with the given atributes
+ *
+ * @param playerCount The amount of players
+ * @param traySize The size of the game tray
+ * @param playerList The list of players
+ * @return
+ */
+Game *initGame(int playerCount, int traySize, Player **playerList);
 
 void freeGame(Game *);
 
@@ -143,14 +152,5 @@ SearchingForGame *initSearchGame(PossiblePieces *, int, Player *);
  */
 void deleteSearchGame(SearchingForGame *);
 
-void setPossiblePieces(PossiblePieces *);
-
-PossiblePieces *initPossiblePieces();
-
-void createDefaultPossiblePieces(int size);
-
-PossiblePieces *getPossiblePieces();
-
-void addPossiblePiece(Piece *piece);
 
 #endif //LABPROG_GAME_H

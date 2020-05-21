@@ -45,7 +45,9 @@ void c_sendPlayerInformation(Player *);
 
 void c_sendPossiblePieces(PossiblePieces *);
 
-PossiblePieces *c_receivePossiblePieces();
+PossiblePieces *c_receivePossiblePieces(Game *game);
+
+void c_waitForOtherPlayerToChoosePieces();
 
 void c_sendAttemptedPlay(Position *pos, int playerID, int gameID);
 

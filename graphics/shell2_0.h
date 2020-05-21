@@ -3,13 +3,30 @@
 
 #include "../structures/game.h"
 
-PossiblePieces* g_readPossiblePieces();
+int sh_readGameSize();
 
-int g_readGameSize();
+char *sh_readPlayerName();
 
-char *g_readPlayerName();
+Position *sh_readPosition();
 
-Position *g_readPosition();
+void sh_alreadyPlayedThere();
 
+void sh_missed();
+
+void sh_hitBoat();
+
+void sh_destroyedBoat();
+
+void sh_showPlaceablePieces(Player *, PossiblePieces *, int *placed);
+
+void sh_showNotPossibleToPlace(Piece *, Position *);
+
+void sh_showPiecePlaced(Piece *, Position *);
+
+void sh_showAllPlaced();
+
+int sh_requestPieceToPlay();
+
+PlacedDirection sh_readPlaceDirection();
 
 #endif //LABPROG_SHELL2_0_H

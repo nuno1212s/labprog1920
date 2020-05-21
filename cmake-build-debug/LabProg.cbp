@@ -159,6 +159,12 @@
 		<Unit filename="/home/nuno/CLionProjects/labprog1920/structures/game.h">
 			<Option target="LabProg"/>
 		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/labprog1920/structures/gamepieces.c">
+			<Option target="LabProg"/>
+		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/labprog1920/structures/gamepieces.h">
+			<Option target="LabProg"/>
+		</Unit>
 		<Unit filename="/home/nuno/CLionProjects/labprog1920/structures/gamestructures.c">
 			<Option target="LabProg"/>
 		</Unit>
