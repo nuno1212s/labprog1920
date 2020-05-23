@@ -1,14 +1,18 @@
 #ifndef LABPROG_SEM_H
 #define LABPROG_SEM_H
 
-#define SEM_NAME "/gamesem"
+#define SEM_NAME "/gamesem1"
 
 void initSem(int host);
 
-void semWait();
+int semWait();
 
-void semPost();
+int semPost();
 
 void semDestroy();
+
+int semTryWait();
+
+int semValue();
 
 #endif //LABPROG_SEM_H

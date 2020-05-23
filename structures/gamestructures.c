@@ -3,6 +3,80 @@
 #include <stdlib.h>
 #include <string.h>
 
+//Generic storage access function declarations
+
+static void *initStorage(int size);
+
+static void *lookUp(void *, Position *);
+
+static void insert(void *, Position *, void *);
+
+static void *delete(void *, Position *);
+
+static void iterateAllPoints(void *, void (*)(PointStorage *));
+
+static void freeStorage(void *);
+
+#define QUAD
+
+#ifdef QUAD
+
+#include "../storagestructures/quadtree.h"
+
+void *initStorage(int size) {
+
+    Position topLeft = {0, size}, bottomRight = {size, 0};
+
+    return initQuadTree(&topLeft, &bottomRight);
+
+}
+
+void *lookUp(void *storage, Position *pos) {
+    return qt_lookup((QuadTree*) storage, pos);
+}
+
+void insert(void *storage, Position *pos, void *toInsert) {
+    return qt_insert((QuadTree *) storage, pos, toInsert);
+}
+
+void *delete(void *storage, Position *pos) {
+    return qt_delete((QuadTree*) storage, pos);
+}
+
+void iterateAllPoints(void *storage, void (*toCall)(PointStorage *)) {
+    q_iterateAllPoints((QuadTree *) storage, (void (*) (void*)) toCall);
+}
+
+void freeStorage(void *storage) {
+    freeQuad((QuadTree*) storage);
+}
+
+#else
+
+#include "../storagestructures/matrix.h"
+
+void *lookUp(void *storage, Position *pos) {
+    return m_lookup((Matrix *) storage, pos);
+}
+
+void insert(void *storage, Position *pos, void *toInsert) {
+    m_insert((Matrix *) storage, pos, toInsert);
+}
+
+void *delete(void *storage, Position *pos) {
+    return m_delete((Matrix *) storage, pos);
+}
+
+void iterateAllPoints(void *storage, void (*toCall)(PointStorage *)) {
+    m_iterateAllPoints((Matrix *) storage, (void (*)(void *)) toCall);
+}
+
+void freeStorage(void *storage) {
+    freeMatrix((Matrix *) storage);
+}
+
+#endif
+
 PointStorage *initPS(HitPoint *point, PieceInBoard *board, HitPoint *ownHitPoint) {
 
     PointStorage *ps = malloc(sizeof(PointStorage));
@@ -49,30 +123,19 @@ void gs_freeHP(HitPoint *hp) {
     free(hp);
 }
 
-GameStorage *initGameStorage(int size, GameStorageType type) {
+GameStorage *initGameStorage(int size) {
 
     GameStorage *gs = malloc(sizeof(GameStorage));
 
     gs->size = size;
 
-    gs->type = type;
+#ifdef QUAD
+    gs->type = GS_QUAD;
+#else
+    gs->type = GS_MATRIX;
+#endif
 
-    switch (type) {
-
-        case GS_MATRIX: {
-            gs->data.matrix = initMatrix(size);
-            break;
-        }
-
-        case GS_QUAD: {
-
-            Position topLeft = {0, size},
-                    bottomRight = {size, 0};
-
-            gs->data.quadTree = initQuadTree(&topLeft, &bottomRight);
-            break;
-        }
-    }
+    gs->data = initStorage(size);
 
     return gs;
 }
@@ -82,22 +145,7 @@ void freeGameStorage(GameStorage *gs) {
     //Release all the stored points
     iterateAllStoredPoints(gs, &freePS);
 
-    switch (gs->type) {
-
-        case GS_QUAD: {
-
-            freeQuad(gs->data.quadTree);
-
-            break;
-        }
-
-        case GS_MATRIX: {
-            freeMatrix(gs->data.matrix);
-
-            break;
-        }
-
-    }
+    freeStorage(gs->data);
 
     free(gs);
 }
@@ -126,7 +174,7 @@ Position **calculateNewPositions(Piece *piece, Position *base, PlacedDirection d
     return newPositions;
 }
 
-void freePositions(Position **pos, int size) {
+static void freePositions(Position **pos, int size) {
 
     for (int i = 0; i < size; i++) {
         p_free(pos[i]);
@@ -135,8 +183,7 @@ void freePositions(Position **pos, int size) {
     free(pos);
 }
 
-Position **canPlace1BlockClearance(Piece *piece, Position *basePos, PlacedDirection dir, void *storage,
-                                   void *(*toCall)(void *, Position *), int traySize) {
+Position **canPlace1BlockClearance(Piece *piece, Position *basePos, PlacedDirection dir, void *storage, int traySize) {
 
     Position **newPos = calculateNewPositions(piece, basePos, dir);
 
@@ -156,7 +203,7 @@ Position **canPlace1BlockClearance(Piece *piece, Position *basePos, PlacedDirect
 
                 Position p = {p_getBaseX(pos) + x, p_getBaseY(pos) + y};
 
-                PointStorage *canPlace = (PointStorage *) toCall(storage, &p);
+                PointStorage *canPlace = (PointStorage *) lookUp(storage, &p);
 
                 if (canPlace != NULL && canPlace->piece != NULL) {
 
@@ -174,34 +221,9 @@ Position **canPlace1BlockClearance(Piece *piece, Position *basePos, PlacedDirect
 
 int gs_canPlayPiece(GameStorage *storage, Piece *piece, Position *pos, PlacedDirection dir) {
 
-    void *(*toLookFunc)(void *, Position *);
+    void *storageObj = storage->data;
 
-    void *storageObj;
-
-    switch (storage->type) {
-
-        case GS_MATRIX: {
-            toLookFunc = (void *(*)(void *, Position *)) m_lookup;
-
-            storageObj = storage->data.matrix;
-
-            break;
-        }
-
-        case GS_QUAD: {
-            toLookFunc = (void *(*)(void *, Position *)) qt_lookup;
-
-            storageObj = storage->data.quadTree;
-
-            break;
-        }
-
-        default:
-            return 0;
-
-    }
-
-    Position **positions = canPlace1BlockClearance(piece, pos, dir, storageObj, toLookFunc, storage->size);
+    Position **positions = canPlace1BlockClearance(piece, pos, dir, storageObj, storage->size);
 
     if (positions != NULL) {
         freePositions(positions, piece->size);
@@ -212,42 +234,18 @@ int gs_canPlayPiece(GameStorage *storage, Piece *piece, Position *pos, PlacedDir
     }
 }
 
-PieceInBoard *insertPieceQuad(QuadTree *qt, Piece *piece, Position *basePos, PlacedDirection dir, int size) {
-
-    void *(*toLookFunc)(void *, Position *) = (void *(*)(void *, Position *)) qt_lookup;
-
-    Position **pos;
-
-    if ((pos = canPlace1BlockClearance(piece, basePos, dir, qt, toLookFunc, size)) != NULL) {
-        PieceInBoard *board = initPieceInBoard(piece, basePos, dir);
-
-        for (int i = 0; i < piece->size; i++) {
-            PointStorage *ps = initPS(NULL, board, NULL);
-
-            qt_insert(qt, pos[i], ps);
-        }
-
-        freePositions(pos, piece->size);
-
-        return board;
-    }
-
-    return NULL;
-}
-
-PieceInBoard *insertPieceMatrix(Matrix *matrix, Piece *piece, Position *basePos, PlacedDirection dir, int size) {
-    void *(*lookUpFunc)(void *, Position *) = (void *(*)(void *, Position *)) &m_lookup;
+PieceInBoard *insertPiece(GameStorage *gs, Piece *piece, Position *basePos, PlacedDirection dir) {
 
     Position **positions;
 
-    if ((positions = canPlace1BlockClearance(piece, basePos, dir, matrix, lookUpFunc, size)) != NULL) {
+    if ((positions = canPlace1BlockClearance(piece, basePos, dir, gs->data, gs->size)) != NULL) {
         PieceInBoard *board = initPieceInBoard(piece, basePos, dir);
 
         for (int i = 0; i < piece->size; i++) {
 
             PointStorage *ps = initPS(NULL, board, NULL);
 
-            m_insert(matrix, positions[i], ps);
+            insert(gs->data, positions[i], ps);
         }
 
         freePositions(positions, piece->size);
@@ -259,30 +257,13 @@ PieceInBoard *insertPieceMatrix(Matrix *matrix, Piece *piece, Position *basePos,
     return NULL;
 }
 
-PieceInBoard *insertPiece(GameStorage *gs, Piece *piece, Position *basePos, PlacedDirection dir) {
-
-    switch (gs->type) {
-
-        case GS_MATRIX: {
-            return insertPieceMatrix(gs->data.matrix, piece, basePos, dir, gs->size);
-        }
-
-        case GS_QUAD: {
-            return insertPieceQuad(gs->data.quadTree, piece, basePos, dir, gs->size);
-        }
-
-    }
-
-    return NULL;
-}
-
-void removePlayedPieceMatrix(Matrix *matrix, PieceInBoard *board) {
+void removePlacedPiece(GameStorage *gs, PieceInBoard *board) {
 
     Position **pos = calculateNewPositions(board->piece, board->basePos, board->direction);
 
     for (int i = 0; i < board->piece->size; i++) {
 
-        void *result = m_lookup(matrix, pos[i]);
+        void *result = lookUp(gs->data, pos[i]);
 
         if (result == NULL) {
             continue;
@@ -292,39 +273,8 @@ void removePlayedPieceMatrix(Matrix *matrix, PieceInBoard *board) {
 
         freePS(p);
 
-        m_delete(matrix, pos[i]);
+        delete(gs->data, pos[i]);
     }
-
-}
-
-void removePlayedPieceQuad(QuadTree *qt, PieceInBoard *piece) {
-
-    Position **pos = calculateNewPositions(piece->piece, piece->basePos, piece->direction);
-
-    for (int i = 0; i < piece->piece->size; i++) {
-        void *result = qt_lookup(qt, pos[i]);
-
-        if (result == NULL) continue;
-
-        freePS(result);
-        //We can just delete the point because to remove played pieces, we know that the game has not started yet and no player has played yet
-        qt_delete(qt, pos[i]);
-    }
-
-    gs_freePIB(piece);
-}
-
-void removePlacedPiece(GameStorage *gs, PieceInBoard *board) {
-
-    switch (gs->type) {
-        case GS_MATRIX:
-            removePlayedPieceMatrix(gs->data.matrix, board);
-            return;
-        case GS_QUAD:
-            removePlayedPieceQuad(gs->data.quadTree, board);
-            return;
-    }
-
 }
 
 HitResponse hitNothing() {
@@ -352,48 +302,12 @@ HitResponse alreadyHit() {
     return s;
 }
 
-HitResponse attemptHitQuad(QuadTree *tree, Position *toHit) {
-
-    PointStorage *point = qt_lookup(tree, toHit);
-
-    if (point == NULL) {
-
-        PointStorage *storage = initPS(initHitPoint(toHit, 0), NULL, NULL);
-
-        qt_insert(tree, toHit, storage);
-
-        return hitNothing();
-    }
-
-    if (point->opponentHitPoint != NULL) {
-
-        return alreadyHit();
-
-    }
-
-    int isHit = 0;
-
-    if (point->piece != NULL) {
-        isHit = 1;
-    }
-
-    point->opponentHitPoint = initHitPoint(toHit, isHit);
-
-    if (isHit) {
-        return hitBoat(point->piece);
-    } else {
-        return hitNothing();
-    }
-}
-//(15, 6) (15, 7) (15, 8)
-
-HitResponse attemptHitMatrix(Matrix *matrix, Position *toHit) {
-
-    PointStorage *point = m_lookup(matrix, toHit);
+HitResponse attemptHitStorage(void *storage, Position *toHit) {
+    PointStorage *point = lookUp(storage, toHit);
 
     if (point == NULL) {
 
-        m_insert(matrix, toHit, initPS(initHitPoint(toHit, 0), NULL, NULL));
+        insert(storage, toHit, initPS(initHitPoint(toHit, 0), NULL, NULL));
 
         return hitNothing();
     }
@@ -411,20 +325,18 @@ HitResponse attemptHitMatrix(Matrix *matrix, Position *toHit) {
     point->opponentHitPoint = initHitPoint(toHit, isHit);
 
     return hitBoat(point->piece);
+
+}
+
+PointStorage *getAtPosition(GameStorage *storage, Position *pos) {
+
+    return (PointStorage *) lookUp(storage->data, pos);
+
 }
 
 HitResponse attemptHit(GameStorage *storage, Position *toHit) {
 
-    HitResponse s = hitNothing();
-
-    switch (storage->type) {
-        case GS_MATRIX:
-            s = attemptHitMatrix(storage->data.matrix, toHit);
-            break;
-        case GS_QUAD:
-            s = attemptHitQuad(storage->data.quadTree, toHit);
-            break;
-    }
+    HitResponse s = attemptHitStorage(storage->data, toHit);
 
     if (s.hit_type == HR_HIT_BOAT) {
         incrementDestroyed(s.hit);
@@ -433,61 +345,30 @@ HitResponse attemptHit(GameStorage *storage, Position *toHit) {
     return s;
 }
 
-void registerHitMatrix(Matrix *matrix, Position *pos, int result) {
-
-    void *position = m_lookup(matrix, pos);
-
-    HitPoint *ourHitPoint = initHitPoint(pos, result);
-
-    if (position == NULL) {
-        position = initPS(NULL, NULL, ourHitPoint);
-
-        m_insert(matrix, pos, position);
-    } else {
-
-        PointStorage *ps = (PointStorage *) position;
-
-        ps->ownHitPoint = ourHitPoint;
-    }
-
-}
-
-void registerHitQuad(QuadTree *tree, Position *pos, int result) {
-
-    void *position = qt_lookup(tree, pos);
-
-    HitPoint *ourHitPoint = initHitPoint(pos, result);
-
-    if (position == NULL) {
-        position = initPS(NULL, NULL, ourHitPoint);
-
-        qt_insert(tree, pos, position);
-    } else {
-
-        PointStorage *ps = (PointStorage *) position;
-
-        ps->ownHitPoint = ourHitPoint;
-    }
-}
-
 void registerHit(GameStorage *storage, Position *pos, int result) {
 
-    switch (storage->type) {
+    void *storageObj = storage->data;
 
-        case GS_MATRIX:
-            registerHitMatrix(storage->data.matrix, pos, result);
-            break;
+    void *position = lookUp(storageObj, pos);
 
-        case GS_QUAD:
-            registerHitQuad(storage->data.quadTree, pos, result);
-            break;
+    HitPoint *ourHitPoint = initHitPoint(pos, result);
+
+    if (position == NULL) {
+        position = initPS(NULL, NULL, ourHitPoint);
+
+        insert(storageObj, pos, position);
+    } else {
+
+        PointStorage *ps = (PointStorage *) position;
+
+        ps->ownHitPoint = ourHitPoint;
     }
 
 }
 
-int hasPlayedGeneric(void *storage, Position *pos, void *(*toLook)(void *, Position *)) {
+static int hasPlayedGeneric(void *storage, Position *pos) {
 
-    void *result = toLook(storage, pos);
+    void *result = lookUp(storage, pos);
 
     if (result == NULL) {
         return 0;
@@ -499,25 +380,7 @@ int hasPlayedGeneric(void *storage, Position *pos, void *(*toLook)(void *, Posit
 }
 
 int hasPlayed(GameStorage *storage, Position *pos) {
-
-    void *(*toLook)(void *, Position *) = NULL;
-
-    void *actualStorage = NULL;
-
-    switch (storage->type) {
-        case GS_QUAD:
-            toLook = (void *(*)(void *, Position *)) qt_lookup;
-
-            actualStorage = storage->data.quadTree;
-            break;
-        case GS_MATRIX:
-            toLook = (void *(*)(void *, Position *)) m_lookup;
-
-            actualStorage = storage->data.matrix;
-            break;
-    }
-
-    return hasPlayedGeneric(actualStorage, pos, toLook);
+    return hasPlayedGeneric(storage->data, pos);
 }
 
 int hasBeenDestroyed(GameStorage *storage, PieceInBoard *board) {
@@ -525,17 +388,5 @@ int hasBeenDestroyed(GameStorage *storage, PieceInBoard *board) {
 }
 
 void iterateAllStoredPoints(GameStorage *storage, void (*toCall)(PointStorage *)) {
-
-    void (*toCallCasted)(void *) = (void (*)(void *)) toCall;
-
-    switch (storage->type) {
-
-        case GS_QUAD:
-            q_iterateAllPoints(storage->data.quadTree, toCallCasted);
-            break;
-        case GS_MATRIX:
-            m_iterateAllPoints(storage->data.matrix, toCallCasted);
-            break;
-    }
-
+    iterateAllPoints(storage->data, toCall);
 }

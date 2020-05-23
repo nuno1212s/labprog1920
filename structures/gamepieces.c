@@ -36,6 +36,12 @@ PossiblePieces *initPossiblePieces(Game *g) {
     return (g->p = gamePossiblePieces);
 }
 
+Piece *getPieceWithId(PossiblePieces *pieces, int pieceID) {
+
+    return ll_get(pieces->piecesList, pieceID);
+
+}
+
 PossiblePieces *getPossiblePieces(Game *game) {
 
     if (game->p == NULL) {
@@ -52,7 +58,7 @@ PossiblePieces *getPossiblePieces(Game *game) {
 
 void createDefaultPossiblePieces(Game *game, int size) {
 
-    initPossiblePieces();
+    initPossiblePieces(game);
 
     int pieceCount = (size * size) / 25;
 

@@ -2,8 +2,6 @@
 #define LABPROG_GAMESTRUCTURES_H
 
 #include "position.h"
-#include "../storagestructures/quadtree.h"
-#include "../storagestructures/matrix.h"
 #include "pieces.h"
 #include "../storagestructures/linkedlist.h"
 
@@ -34,11 +32,7 @@ struct GameStorage_ {
 
     int size;
 
-    union {
-        Matrix *matrix;
-
-        QuadTree *quadTree;
-    } data;
+    void *data;
 };
 
 struct HitResponse_ {
@@ -76,7 +70,7 @@ void gs_freeHP(HitPoint *);
 /**
  * GameStorages
  */
-GameStorage *initGameStorage(int size, GameStorageType type);
+GameStorage *initGameStorage(int size);
 
 void freeGameStorage(GameStorage *);
 
@@ -110,6 +104,8 @@ void removePlacedPiece(GameStorage *, PieceInBoard *);
  * @return The response of the hit
  */
 HitResponse attemptHit(GameStorage *, Position *);
+
+PointStorage *getAtPosition(GameStorage *, Position *);
 
 /**
  * Check if we have played in a specific position

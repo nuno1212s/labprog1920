@@ -1,5 +1,24 @@
-//
-// Created by nuno on 18/05/20.
-//
-
 #include "same_shell.h"
+int ssh_readGameSize() {
+
+}
+
+void ssh_writeGameSize(int);
+
+void ssh_readPlayerInformation(Player *);
+
+void ssh_sendPlayerInformation(Player *);
+
+void ssh_sendPossiblePieces(PossiblePieces *);
+
+PossiblePieces *ssh_receivePossiblePieces(Game *game);
+
+void ssh_waitForOtherPlayerToChoosePieces();
+
+void ssh_sendAttemptedPlay(Position *pos, int playerID, int gameID);
+
+Played ssh_receiveAttemptedPlay(int gameID);
+
+void ssh_respondToAttemptedPlay(int playerID, HitType hit, int gameID);
+
+HitResult ssh_receivedAttemptedPlayResult(int gameID);

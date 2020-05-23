@@ -1,19 +1,39 @@
-
 #ifndef LABPROG_SHELL_H
 #define LABPROG_SHELL_H
 
 #include "../structures/game.h"
+#include "../gameplay.h"
 
-Game *sg_displayMenu();
+PossiblePieces *sh_readPossiblePieces(Game *);
 
-void sg_displayGame(Game *);
+int sh_readGameSize();
 
-void displayGameTray(Player *, int size);
+char *sh_readPlayerName();
 
-/**
- * User defined possible game pieces
- * @return
- */
-PossiblePieces *readPossiblePieces(int traySize);
+Position *sh_readPosition();
+
+void sh_alreadyPlayedThere();
+
+void sh_missed();
+
+void sh_hitBoat();
+
+void sh_destroyedBoat();
+
+void sh_showPlaceablePieces(Player *, PossiblePieces *, PieceInBoard **placed);
+
+void sh_showNotPossibleToPlace(Piece *, Position *);
+
+void sh_showPiecePlaced(Piece *, Position *);
+
+void sh_showAllPlaced();
+
+int sh_requestPieceToPlay(int maxSize);
+
+PlacedDirection sh_readPlaceDirection();
+
+void sh_showYourTurn(Player *player);
+
+void sh_showOtherTurn(Player *player);
 
 #endif //LABPROG_SHELL_H

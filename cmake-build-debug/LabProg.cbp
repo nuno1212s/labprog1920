@@ -120,12 +120,6 @@
 		<Unit filename="/home/nuno/CLionProjects/labprog1920/graphics/shell.h">
 			<Option target="LabProg"/>
 		</Unit>
-		<Unit filename="/home/nuno/CLionProjects/labprog1920/graphics/shell2_0.c">
-			<Option target="LabProg"/>
-		</Unit>
-		<Unit filename="/home/nuno/CLionProjects/labprog1920/graphics/shell2_0.h">
-			<Option target="LabProg"/>
-		</Unit>
 		<Unit filename="/home/nuno/CLionProjects/labprog1920/main.c">
 			<Option target="LabProg"/>
 		</Unit>

@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 #include "graphics/graphics.h"
 #include "communication/communications.h"
 
@@ -17,6 +18,14 @@ static void runGame(Game *);
 
 static void placePieces(Game *, Player *);
 
+void test() {
+
+    printf("HELLO\n");
+
+    sleep(5);
+
+}
+
 void startGame(int host) {
 
     initGraphics(SHELL);
@@ -29,33 +38,29 @@ void startGame(int host) {
 
     Player **players = malloc(sizeof(Player *) * PLAYER_COUNT);
 
-    if (host == 1) {
-        GAME_TYPE type = g_readGameType();
+    initComms(host);
 
-        switch (type) {
-            case ONE_SHELL:
-                initComms(SAME_SHELL, host);
-                break;
-            case TWO_SHELL_TEXT:
-                initComms(TEXT, host);
-                break;
-            case TWO_SHELL_PIPES:
-                initComms(PIPES, host);
-                break;
-            case TWO_SHELL_NETWORK:
-                initComms(NETWORK, host);
-                break;
-        }
+    if (host == 1) {
 
         playerID = 0;
 
+        c_block();
+
         traySize = g_readGameSize();
+
+        c_writeGameSize(traySize);
+
+        sleep(1);
+
+        c_block();
 
         playerName = g_readPlayerName();
 
         player0 = initPlayer(playerName, traySize, 1);
 
         c_sendPlayerInformation(player0);
+
+        sleep(20);
 
         player1 = initPlayer(NULL, traySize, 0);
 
@@ -67,15 +72,23 @@ void startGame(int host) {
 
         traySize = c_readGameSize();
 
+        printf("Chosen game size is :%d\n", traySize);
+
         player0 = initPlayer(NULL, traySize, 0);
 
         c_readPlayerInformation(player0);
+
+        printf("Your opponents name is %s\n", player0->name);
+
+        c_block();
 
         playerName = g_readPlayerName();
 
         player1 = initPlayer(playerName, traySize, 1);
 
         c_sendPlayerInformation(player1);
+
+        sleep(1);
     }
 
     free(playerName);
@@ -97,6 +110,8 @@ void startGame(int host) {
 PossiblePieces *readPieces(Game *game) {
 
     if (isHost) {
+
+        c_block();
 
         PossiblePieces *pieces = g_readPossiblePieces(game);
 
@@ -134,7 +149,7 @@ void placePieces(Game *game, Player *player) {
             break;
         }
 
-        Piece *piece = getPieceWithId(pieceID);
+        Piece *piece = getPieceWithId(game->p, pieceID);
 
         Position *pos = g_readPosition();
 
@@ -160,6 +175,8 @@ void runGame(Game *game) {
     while (!hasFinished(game)) {
 
         if (game->currentPlayerIndex == playerID) {
+
+            c_block();
 
             Player *playerData = getCurrentPlayer(game);
 

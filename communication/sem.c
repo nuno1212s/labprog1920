@@ -4,10 +4,15 @@
 #include <stdio.h>
 #include <semaphore.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 static sem_t *sem;
 
+static int isHost;
+
 void initSem(int host) {
+
+    isHost = host;
 
     if (host) {
         sem = sem_open(SEM_NAME, O_CREAT, 0644, 1);
@@ -20,27 +25,50 @@ void initSem(int host) {
         }
 
     } else {
-        sem = sem_open(SEM_NAME, 0);
+        sem = sem_open(SEM_NAME, O_CREAT, 0644, 1);
     }
 
-    if (sem == SEM_FAILED) {
+    if (sem == SEM_FAILED || sem == NULL) {
         perror("Unable to create semaphore\n");
 
         sem_unlink(SEM_NAME);
 
         return;
     }
+
 }
 
-void semWait() {
-    sem_wait(sem);
+int semWait() {
+    return sem_wait(sem);
 }
 
-void semPost() {
-    sem_post(sem);
+int semPost() {
+
+    int result = sem_post(sem);
+
+    printf("Sem post called, result %d, new sem value: %d \n",result, semValue());
+
+    return result;
+}
+
+int semTryWait() {
+    return sem_trywait(sem);
+}
+
+int semValue() {
+    int value;
+
+    sem_getvalue(sem, &value);
+
+    return value;
 }
 
 void semDestroy() {
-    sem_unlink(SEM_NAME);
+    if (isHost) {
+        sem_close(sem);
+        sem_unlink(SEM_NAME);
+    } else {
+        sem_close(sem);
+    }
 }
 

@@ -1,6 +1,6 @@
 
 #include "graphics.h"
-#include "shell2_0.h"
+#include "shell.h"
 
 static GRAPHICS graphicsType;
 
@@ -13,13 +13,6 @@ GRAPHICS getGraphics() {
 }
 
 GAME_TYPE g_readGameType() {
-
-    switch (graphicsType) {
-
-        case SHELL:
-            return sh_readGameType();
-
-    }
 
 }
 

@@ -3,15 +3,6 @@
 
 #include "../structures/game.h"
 
-typedef enum {
-
-    SAME_SHELL,
-    TEXT,
-    PIPES,
-    NETWORK
-
-} COMM_TYPE;
-
 typedef struct {
 
     Position *pos;
@@ -33,7 +24,9 @@ typedef struct {
  *
  * @param host Whether this process is the parent process
  */
-void initComms(COMM_TYPE, int host);
+void initComms(int host);
+
+void c_block();
 
 int c_readGameSize();
 
@@ -56,5 +49,7 @@ Played c_receiveAttemptedPlay(int gameID);
 void c_respondToAttemptedPlay(int playerID, HitType hit, int gameID);
 
 HitResult c_receivedAttemptedPlayResult(int gameID);
+
+void c_destroy();
 
 #endif //LABPROG_COMMUNICATIONS_H

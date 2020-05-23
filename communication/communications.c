@@ -1,117 +1,116 @@
+
 #include "communications.h"
+
+#define TEXT
+
+#ifdef TEXT
+
 #include "text.h"
-#include "sem.h"
 
-static COMM_TYPE type;
+#else
 
-void initComms(COMM_TYPE commType, int host) {
-    type = commType;
+#include "same_shell.h"
 
-    switch (type) {
-        case TEXT:
-            txt_init(host);
-            break;
-    }
+#endif
+
+void initComms(int host) {
+#ifdef TEXT
+    txt_init(host);
+#else
+
+#endif
 }
 
 int c_readGameSize() {
 
-    switch (type) {
-        case TEXT:
-            return txt_readGameSize();
-    }
+#ifdef TEXT
+    return txt_readGameSize();
+#endif
+}
+
+void c_block() {
+
+#ifdef TEXT
+    txt_block();
+#endif
 
 }
 
 void c_writeGameSize(int size) {
-    switch (type) {
-        case TEXT:
-            txt_sendGameSize(size);
-            break;
-    }
+
+#ifdef TEXT
+    txt_sendGameSize(size);
+#endif
 
 }
 
 void c_sendPossiblePieces(PossiblePieces *pieces) {
 
-    switch (type) {
-
-        case TEXT:
-            txt_writePossiblePieces(pieces);
-            break;
-    }
+#ifdef TEXT
+    txt_writePossiblePieces(pieces);
+#endif
 
 }
 
 void c_readPlayerInformation(Player *player) {
 
-    switch (type) {
-
-        case TEXT:
-            txt_readPlayerInformation(player);
-            break;
-    }
-
+#ifdef TEXT
+    txt_readPlayerInformation(player);
+#endif
 }
 
 void c_sendPlayerInformation(Player *player) {
 
-    switch (type) {
-
-        case TEXT:
-            txt_sendPlayerInformation(player);
-            break;
-
-    }
+#ifdef TEXT
+    txt_sendPlayerInformation(player);
+#endif
 
 }
 
 PossiblePieces *c_receivePossiblePieces(Game *game) {
-
-    switch (type) {
-
-        case TEXT:
-         return txt_readPossiblePieces(game);
-
-    }
+#ifdef TEXT
+    return txt_readPossiblePieces(game);
+#endif
 }
 
 void c_sendAttemptedPlay(Position *pos, int playerID, int gameID) {
-
-
-    switch (type) {
-
-        case TEXT:
-            txt_sendAttemptedPlay(pos, playerID, gameID);
-            break;
-    }
-
+#ifdef TEXT
+    txt_sendAttemptedPlay(pos, playerID, gameID);
+#endif
 }
 
 Played c_receiveAttemptedPlay(int gameID) {
-    switch (type) {
 
-        case TEXT:
-            return txt_receiveAttemptedPlay(gameID);
-
-    }
+#ifdef TEXT
+    return txt_receiveAttemptedPlay(gameID);
+#endif
 }
 
 HitResult c_receivedAttemptedPlayResult(int gameID) {
 
-    switch (type) {
-        case TEXT:
-            return txt_receivedAttemptedPlayResult(gameID);
-    }
+#ifdef TEXT
+    return txt_receivedAttemptedPlayResult(gameID);
+#endif
+
+}
+
+void c_waitForOtherPlayerToChoosePieces() {
+
+#ifdef TEXT
+    txt_waitForOtherPlayerToChoosePieces();
+#endif
 
 }
 
 void c_respondToAttemptedPlay(int playerID, HitType hit, int gameID) {
 
-    switch (type) {
-        case TEXT:
-            txt_respondToAttemptedPlay(playerID, hit, gameID);
-            break;
-    }
+#ifdef TEXT
+    txt_respondToAttemptedPlay(playerID, hit, gameID);
+#endif
+}
 
+void c_destroy() {
+#ifdef TEXT
+    txt_destroy();
+#endif
 }

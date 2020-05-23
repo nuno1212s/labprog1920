@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "sem.h"
 #include <unistd.h>
 #include "../storagestructures/bitmap.h"
 #include "../storagestructures/linkedlist.h"
@@ -12,12 +13,16 @@
 
 static FILE *fp;
 
+static int isBlocking = 0;
+
 static char BUFFER[BUFFER_SIZE];
 
 static void txt_repeatPiece();
-static void txt_writePiece(Piece*);
 
-static Piece * readPiece(Piece*);
+static void txt_writePiece(Piece *);
+
+static Piece *readPiece(Piece *);
+
 static BitMatrix *readMatrix();
 
 static void initFP(int host) {
@@ -36,22 +41,90 @@ static void initFP(int host) {
     }
 }
 
+void failAndWait() {
+
+    //Release the semaphore so that others can do their work
+    semPost();
+
+    perror("FAILED TO READ FROM FILE... WAITING 3 SECONDS FOR OTHER TERMINAL...");
+
+    sleep(3);
+
+}
+
 void txt_flush() {
     fflush(fp);
 }
 
 void txt_init(int host) {
     initFP(host);
+
+    initSem(host);
+}
+
+void txt_semWait() {
+
+    printf("TXT_SEMWAIT CALLED SEM RESULT: %d, BLOCKING = %d\n", semValue(), isBlocking);
+
+    if (isBlocking) {
+        isBlocking = 0;
+    } else {
+        semWait();
+
+        printf("TXT_SEMWAIT RELEASED\n");
+    }
+}
+
+void txt_block() {
+    //The semaphore is at 1 when no one is accessing it. We want to set it at 0 so that others cannot access it when we are doing something that they have to wait for
+
+    printf("TXT_BLOCK CALLED, CURRENT SEM RESULT: %d\n", semValue());
+
+    semWait();
+
+    printf("TXTBLOCK RELEASED\n");
+
+    isBlocking = 1;
+}
+
+int txt_readGameSize() {
+    txt_semWait();
+
+    if (fgets(BUFFER, BUFFER_SIZE, fp) == 0) {
+        failAndWait();
+
+        return txt_readGameSize();
+    }
+
+    int gameSize = (int) strtol(BUFFER, NULL, 10);
+
+    semPost();
+
+    return gameSize;
+}
+
+void txt_sendGameSize(int gameSize) {
+
+    txt_semWait();
+
+    fprintf(fp, "%d\n", gameSize);
+
+    txt_flush();
+
+    semPost();
+
 }
 
 void txt_writePossiblePieces(PossiblePieces *pieces) {
+
+    txt_semWait();
 
     fprintf(fp, "%d\n", ll_size(pieces->piecesList));
 
     struct Node_s *node = pieces->piecesList->first;
 
     Piece *prevPiece = NULL,
-     *currentPiece = NULL;
+            *currentPiece = NULL;
 
     while (node != NULL) {
         currentPiece = node->data;
@@ -67,28 +140,41 @@ void txt_writePossiblePieces(PossiblePieces *pieces) {
     }
 
     txt_flush();
+
+    semPost();
 }
 
 void txt_sendPlayerInformation(Player *player) {
 
+    txt_semWait();
+
     fprintf(fp, "%s\n", player->name);
+
+    txt_flush();
+
+    semPost();
 
 }
 
 void txt_readPlayerInformation(Player *player) {
 
+    txt_semWait();
+
     if (fgets(BUFFER, BUFFER_SIZE, fp) == 0) {
 
-        perror("FAILED TO READ PLAYER INFO.");
+        failAndWait();
 
-        exit(1);
+        txt_readPlayerInformation(player);
+
+        return;
     }
 
     player->name = strdup(BUFFER);
+
+    semPost();
 }
 
 static void txt_writePiece(Piece *piece) {
-
     fprintf(fp, "PIECE\n%s-%d\n", piece->name, piece->size);
 
     for (int row = 0; row < matrix_rows(piece->matrix); row++) {
@@ -110,19 +196,20 @@ static void txt_repeatPiece() {
 
 PossiblePieces *txt_readPossiblePieces(Game *game) {
 
-
+    txt_semWait();
 
     PossiblePieces *pieces = initPossiblePieces(game);
 
     if (fgets(BUFFER, BUFFER_SIZE, fp) == 0) {
-        perror("FAILED TO READ POSSIBLE PIECES.");
 
-        exit(1);
+        failAndWait();
+
+        return txt_readPossiblePieces(game);
     }
 
     long pieceCount = strtol(BUFFER, NULL, 10);
 
-    Piece *current= NULL, *prev = NULL;
+    Piece *current = NULL, *prev = NULL;
 
     for (int i = 0; i < pieceCount; i++) {
 
@@ -132,6 +219,8 @@ PossiblePieces *txt_readPossiblePieces(Game *game) {
 
         prev = current;
     }
+
+    semPost();
 
     return pieces;
 }
@@ -201,20 +290,46 @@ static BitMatrix *readMatrix() {
     return matrix;
 }
 
+void txt_waitForOtherPlayerToChoosePieces() {
+
+    if (!semTryWait()) {
+        //If we are the first ones in, (Nothing on the file) write to the file, so that the other one will see and unlock us
+        //This can block if process 2 enters between process 1 trying to lock and writing to the file, causing writing to be done twice
+        //Not much I can do about that without having to use another named semaphore, so I just decided to leave it be as the odds are pretty low
+        if (fgets(BUFFER, BUFFER_SIZE, fp) == 0) {
+            fprintf(fp, "%d\n", 1);
+
+            txt_flush();
+
+            semWait();
+        } else {
+            semPost();
+        }
+    }
+
+}
+
 void txt_sendAttemptedPlay(Position *pos, int playerID, int gameID) {
+    txt_semWait();
+
     fprintf(fp, "%d %d %d %d\n", pos->x, pos->y, playerID, gameID);
 
     txt_flush();
+
+    semPost();
 }
 
 Played txt_receiveAttemptedPlay(int game) {
 
+    txt_semWait();
+
     Played p;
 
     if (fgets(BUFFER, BUFFER_SIZE, fp) == 0) {
-        perror("FAILED TO READ ATTEMPTED PLAY.");
 
-        exit(1);
+        failAndWait();
+
+        return txt_receiveAttemptedPlay(game);
     }
 
     int x, y, playerID, gameID;
@@ -246,7 +361,7 @@ Played txt_receiveAttemptedPlay(int game) {
 
         exit(1);
     }
-
+    //We don't want to release the semaphore until the response is given, as it could cause some major issues with deadlocks
     return p;
 }
 
@@ -255,11 +370,19 @@ void txt_respondToAttemptedPlay(int playerID, HitType hit, int gameID) {
     fprintf(fp, "%d %d %d\n", playerID, hit, gameID);
 
     txt_flush();
+
+    semPost();
 }
 
 HitResult txt_receivedAttemptedPlayResult(int gameID) {
 
-    fgets(BUFFER, BUFFER_SIZE, fp);
+    txt_semWait();
+
+    if (fgets(BUFFER, BUFFER_SIZE, fp) == 0) {
+        perror("Failed to receive attempted play result.\n");
+
+        exit(1);
+    }
 
     char *ptr = strtok(BUFFER, " ");
 
@@ -284,5 +407,11 @@ HitResult txt_receivedAttemptedPlayResult(int gameID) {
     result.playerID = playerID;
     result.type = hit;
 
+    semPost();
+
     return result;
+}
+
+void txt_destroy() {
+    semDestroy();
 }

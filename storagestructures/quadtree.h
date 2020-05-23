@@ -3,7 +3,7 @@
 
 #include "../structures/position.h"
 
-#define MAX_NODES_PER_LEAF 5
+#define MAX_NODES_PER_LEAF 1
 
 typedef enum {
     QT_NODE, QT_LEAF
@@ -65,7 +65,7 @@ typedef struct QuadTree_ QuadTree;
  * These positions are cloned so they can be safely deleted afterwards
  * @return
  */
-QuadTree *initQuadTree(Position *, Position *);
+QuadTree *initQuadTree(Position *topLeft, Position *bottomRight);
 
 void *getValue(QuadPoint *);
 

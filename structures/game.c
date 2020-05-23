@@ -203,7 +203,7 @@ Player *initPlayer(char *name, int size, int isHost) {
     }
 
     if (isHost) {
-        player->storage = initGameStorage(size, size > MATRIX_THRESHOLD ? GS_QUAD : GS_MATRIX);
+        player->storage = initGameStorage(size);
     } else {
         player->storage = NULL;
     }
@@ -245,8 +245,9 @@ int getRand(int size) {
 
 SearchingForGame *initGameForPlayer(Player *player, int size) {
 
-    return initSearchGame(getPossiblePieces(), size, player);
+//    return initSearchGame(getPossiblePieces(), size, player);
 
+    return NULL;
 }
 
 void randomizePiecesLeft(Player *player, int size, PieceInBoard **placed, PossiblePieces *pieces) {
@@ -293,10 +294,12 @@ void randomizePiecesLeft(Player *player, int size, PieceInBoard **placed, Possib
 }
 
 SearchingForGame *randomizePieces(Player *player, int size) {
+//
+//    randomizePiecesLeft(player, size, NULL, getPossiblePieces());
+//
+//    return initSearchGame(getPossiblePieces(), size, player);
 
-    randomizePiecesLeft(player, size, NULL, getPossiblePieces());
-
-    return initSearchGame(getPossiblePieces(), size, player);
+    return NULL;
 }
 
 void freePlayer(Player *player) {
