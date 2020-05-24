@@ -32,15 +32,19 @@ int c_readGameSize();
 
 void c_writeGameSize(int);
 
-void c_readPlayerInformation(Player *);
+void c_readPlayerInformation(int id, Player *);
 
-void c_sendPlayerInformation(Player *);
+void c_sendPlayerInformation(int id, Player *);
 
 void c_sendPossiblePieces(PossiblePieces *);
 
 PossiblePieces *c_receivePossiblePieces(Game *game);
 
 void c_waitForOtherPlayerToChoosePieces();
+
+void c_sendGameInfo(Game *);
+
+void c_readGameInfo(Game *);
 
 void c_sendAttemptedPlay(Position *pos, int playerID, int gameID);
 

@@ -18,17 +18,11 @@ static void runGame(Game *);
 
 static void placePieces(Game *, Player *);
 
-void test() {
-
-    printf("HELLO\n");
-
-    sleep(5);
-
-}
-
 void startGame(int host) {
 
     initGraphics(SHELL);
+
+    isHost = host;
 
     int traySize;
 
@@ -50,7 +44,7 @@ void startGame(int host) {
 
         c_writeGameSize(traySize);
 
-        sleep(1);
+        g_displayGameSize(traySize);
 
         c_block();
 
@@ -58,27 +52,24 @@ void startGame(int host) {
 
         player0 = initPlayer(playerName, traySize, 1);
 
-        c_sendPlayerInformation(player0);
-
-        sleep(20);
+        c_sendPlayerInformation(0, player0);
 
         player1 = initPlayer(NULL, traySize, 0);
 
-        c_readPlayerInformation(player1);
+        c_readPlayerInformation(1, player1);
 
+        g_displayOpponentName(player1->name);
     } else {
 
         playerID = 1;
 
         traySize = c_readGameSize();
 
-        printf("Chosen game size is :%d\n", traySize);
+        g_displayGameSize(traySize);
 
         player0 = initPlayer(NULL, traySize, 0);
 
-        c_readPlayerInformation(player0);
-
-        printf("Your opponents name is %s\n", player0->name);
+        c_readPlayerInformation(0, player0);
 
         c_block();
 
@@ -86,9 +77,9 @@ void startGame(int host) {
 
         player1 = initPlayer(playerName, traySize, 1);
 
-        c_sendPlayerInformation(player1);
+        c_sendPlayerInformation(1, player1);
 
-        sleep(1);
+        g_displayOpponentName(player0->name);
     }
 
     free(playerName);
@@ -96,20 +87,46 @@ void startGame(int host) {
     players[0] = player0;
     players[1] = player1;
 
-    Game *game = initGame(PLAYER_COUNT, traySize, players);
+    Game *game;
+
+    if (host) {
+        game = initGame(PLAYER_COUNT, traySize, players);
+
+        c_sendGameInfo(game);
+    } else {
+        game = initGame(PLAYER_COUNT, traySize, players);
+
+        c_readGameInfo(game);
+    }
+
+    printf("The gameID is: %d, Current player is: %s\n", game->gameID, getCurrentPlayer(game)->name);
+
+    sleep(2);
 
     PossiblePieces *pieces = readPieces(game);
 
-    placePieces(game, host ? player0 : player1);
+    if (host) {
+        placePieces(game, player0);
+
+        player1->currentActivePieceCount = ll_size(pieces->piecesList);
+    } else {
+        placePieces(game, player1);
+
+        player0->currentActivePieceCount = ll_size(pieces->piecesList);
+    }
 
     runGame(game);
 
     freeGame(game);
+
+    c_destroy();
 }
 
 PossiblePieces *readPieces(Game *game) {
 
     if (isHost) {
+
+        printf("Reading pieces host.\n");
 
         c_block();
 
@@ -130,7 +147,7 @@ void placePieces(Game *game, Player *player) {
 
     int pieceCount = getPossiblePiecesCount(game->p);
 
-    PieceInBoard *hasBeenPlaced[pieceCount];
+    PieceInBoard ** hasBeenPlaced = calloc(pieceCount, sizeof(PieceInBoard*));
 
     while (1) {
 
@@ -167,12 +184,20 @@ void placePieces(Game *game, Player *player) {
         }
     }
 
+    g_waitingForOpponent();
+
     c_waitForOtherPlayerToChoosePieces();
+
+
 }
 
 void runGame(Game *game) {
 
-    while (!hasFinished(game)) {
+    printf("Starting game...\n");
+
+    while (hasFinished(game) == -1) {
+
+        printf("Current player: %d, PlayerID: %d\n", game->currentPlayerIndex, playerID);
 
         if (game->currentPlayerIndex == playerID) {
 
@@ -226,10 +251,14 @@ void runGame(Game *game) {
         } else {
             Player *current = getCurrentPlayer(game);
 
+            printf("Hello\n");
+
             g_showOtherTurn(current);
+            printf("Hello 2\n");
 
             Played played = c_receiveAttemptedPlay(game->gameID);
 
+            printf("Hello 3\n");
             if (played.playerID != game->currentPlayerIndex) {
                 perror("FAILED TO LOAD RESULT FOR ATTEMPTED PLAY");
 

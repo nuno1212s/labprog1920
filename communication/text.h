@@ -12,9 +12,13 @@ int txt_readGameSize();
 
 void txt_sendGameSize(int);
 
-void txt_readPlayerInformation(Player *);
+void txt_readPlayerInformation(int id, Player *);
 
-void txt_sendPlayerInformation(Player *);
+void txt_sendPlayerInformation(int id, Player *);
+
+void txt_sendGameInfo(Game *);
+
+void txt_readGameInfo(Game *);
 
 void txt_writePossiblePieces(PossiblePieces *);
 

@@ -2,21 +2,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "sem.h"
 #include <unistd.h>
-#include "../storagestructures/bitmap.h"
-#include "../storagestructures/linkedlist.h"
+#include <fcntl.h>
+#include <sys/stat.h>
 
 #define TEXT_FILE "gameinfo.txt"
 
 #define BUFFER_SIZE 1024
 
-static FILE *fp;
-
-static int isBlocking = 0;
-
 static char BUFFER[BUFFER_SIZE];
 
+static int host;
+
+static FILE *fp;
+
+static int isBlocking = 0, isReadLock = 0;
+
+static struct flock lock;
+
+/**
+ * Preemptive method declarations
+ */
 static void txt_repeatPiece();
 
 static void txt_writePiece(Piece *);
@@ -25,26 +31,181 @@ static Piece *readPiece(Piece *);
 
 static BitMatrix *readMatrix();
 
-static void initFP(int host) {
-    if (host) {
-        //If we are the host, reset the file.
-        fp = fopen(TEXT_FILE, "w+");
-    } else {
-        //If we are not the host, just open the file as it is.
-        fp = fopen(TEXT_FILE, "r+");
+static void closeFP();
+
+static void markWriter() {
+
+    fprintf(fp, "%d\n", host);
+
+}
+
+static int checkWriter() {
+
+    if (fgets(BUFFER, BUFFER_SIZE, fp) == 0) {
+        printf("Failed to read the writer\n");
+
+        return 0;
     }
 
-    if (fp == NULL) {
-        fprintf(stderr, "Failed to open the text file %s\n", TEXT_FILE);
+    int writer = (int) strtol(BUFFER, NULL, 10);
+
+    if (writer == host) {
+        printf("Writer is the same as the reader.");
+
+        return 0;
+    }
+
+    return 1;
+}
+
+/**
+ * Init the file pointer and get the file write lock
+ *
+ * @param ignore Whether the file should ignore if there are already stuff there
+ */
+static void initWriteFP(int ignore) {
+
+    if (isBlocking == 1) {
+        isBlocking = 0;
+        return;
+    }
+
+    lock.l_type = F_WRLCK;
+    lock.l_whence = SEEK_SET;
+    lock.l_start = 0;
+    lock.l_len = 0; //Until EOF
+    lock.l_pid = getpid();
+
+    isReadLock = 0;
+
+    if ((fp = fopen(TEXT_FILE, "r+")) <= 0) {
+
+        perror("Failed to open file...\n");
+
+        sleep(5);
 
         exit(1);
     }
+
+    printf("Attempting to obtain lock for write file...\n");
+
+    printf("FPN: %d\n", fileno(fp));
+
+    if (fcntl(fileno(fp), F_SETLKW, &lock) < 0) {
+        perror("FAILED TO LOCK FILE.\n");
+
+        exit(1);
+    }
+
+    if (!ignore) {
+        struct stat fileStat;
+
+        fstat(fileno(fp), &fileStat);
+
+        if (fileStat.st_size != 0) {
+
+            perror("FILE IS NOT EMPTY, WAITING FOR OTHER READ\n");
+
+            closeFP();
+
+            sleep(1);
+
+            initWriteFP(0);
+        } else {
+            printf("File is good for use\n");
+        }
+    }
+
+}
+
+/**
+ * Initialize the reading file pointer.
+ */
+static void initReadFP() {
+
+    if (isBlocking == 1) {
+        isBlocking = 0;
+        return;
+    }
+
+    lock.l_type = F_WRLCK;
+    lock.l_whence = SEEK_SET;
+    lock.l_start = 0;
+    lock.l_len = 0; //Until EOF
+    lock.l_pid = getpid();
+
+    isReadLock = 1;
+
+    if ((fp = fopen(TEXT_FILE, "r+")) <= 0) {
+        perror("Failed to open file...\n");
+
+        sleep(5);
+
+        exit(1);
+    }
+
+    printf("Attempting to obtain lock for read file...\n");
+    printf("FPN: %d\n", fileno(fp));
+
+    if (fcntl(fileno(fp), F_SETLKW, &lock) < 0) {
+        perror("FAILED TO LOCK FILE.\n");
+
+        exit(1);
+    }
+
+}
+
+static void startWriter() {
+    if (isBlocking) {
+        isBlocking = 0;
+
+        return;
+    }
+
+    initWriteFP(0);
+
+    markWriter();
+}
+
+static void startRead() {
+
+    initReadFP();
+
+    if (!checkWriter()) {
+        //If the writer is this instance of the game, then we don't want to read it as it was meant for the other instance.
+        isReadLock = 0;
+        closeFP();
+
+        sleep(1);
+
+        startRead();
+    }
+
+}
+
+static void closeFP() {
+
+    lock.l_type = F_UNLCK;
+
+    if (fcntl(fileno(fp), F_SETLK, &lock) < 0) {
+        perror("Could not unlock file *\n");
+
+        exit(1);
+    }
+
+    if (isReadLock) {
+        //Reset the file after reading
+        ftruncate(fileno(fp), 0);
+    }
+
+    fclose(fp);
+
 }
 
 void failAndWait() {
 
-    //Release the semaphore so that others can do their work
-    semPost();
+    //Release the file so that others can do their work
+    closeFP();
 
     perror("FAILED TO READ FROM FILE... WAITING 3 SECONDS FOR OTHER TERMINAL...");
 
@@ -56,39 +217,31 @@ void txt_flush() {
     fflush(fp);
 }
 
-void txt_init(int host) {
-    initFP(host);
+void txt_init(int isHost) {
+    host = isHost;
 
-    initSem(host);
-}
+    //Create the file
+    FILE *file = fopen(TEXT_FILE, "w");
 
-void txt_semWait() {
-
-    printf("TXT_SEMWAIT CALLED SEM RESULT: %d, BLOCKING = %d\n", semValue(), isBlocking);
-
-    if (isBlocking) {
-        isBlocking = 0;
-    } else {
-        semWait();
-
-        printf("TXT_SEMWAIT RELEASED\n");
-    }
+    fclose(file);
 }
 
 void txt_block() {
-    //The semaphore is at 1 when no one is accessing it. We want to set it at 0 so that others cannot access it when we are doing something that they have to wait for
 
-    printf("TXT_BLOCK CALLED, CURRENT SEM RESULT: %d\n", semValue());
+    if (isBlocking) return;
 
-    semWait();
+    printf("TXT_BLOCK CALLED \n");
 
-    printf("TXTBLOCK RELEASED\n");
+    startWriter();
+
+    printf("TXTBLOCK INITIALIZED\n");
 
     isBlocking = 1;
 }
 
 int txt_readGameSize() {
-    txt_semWait();
+
+    startRead();
 
     if (fgets(BUFFER, BUFFER_SIZE, fp) == 0) {
         failAndWait();
@@ -98,26 +251,25 @@ int txt_readGameSize() {
 
     int gameSize = (int) strtol(BUFFER, NULL, 10);
 
-    semPost();
+    closeFP();
 
     return gameSize;
 }
 
 void txt_sendGameSize(int gameSize) {
 
-    txt_semWait();
+    startWriter();
 
     fprintf(fp, "%d\n", gameSize);
 
     txt_flush();
 
-    semPost();
-
+    closeFP();
 }
 
 void txt_writePossiblePieces(PossiblePieces *pieces) {
 
-    txt_semWait();
+    startWriter();
 
     fprintf(fp, "%d\n", ll_size(pieces->piecesList));
 
@@ -141,37 +293,58 @@ void txt_writePossiblePieces(PossiblePieces *pieces) {
 
     txt_flush();
 
-    semPost();
+    closeFP();
 }
 
-void txt_sendPlayerInformation(Player *player) {
 
-    txt_semWait();
+void txt_writePlayerInfo(int id, char *name) {
+    startWriter();
 
-    fprintf(fp, "%s\n", player->name);
+    fprintf(fp, "%d %s\n", id, name);
 
     txt_flush();
 
-    semPost();
-
+    closeFP();
 }
 
-void txt_readPlayerInformation(Player *player) {
+void txt_sendPlayerInformation(int id, Player *player) {
+    txt_writePlayerInfo(id, player->name);
+}
 
-    txt_semWait();
+
+void txt_readPlayerInformation(int id, Player *player) {
+
+    startRead();
 
     if (fgets(BUFFER, BUFFER_SIZE, fp) == 0) {
 
         failAndWait();
 
-        txt_readPlayerInformation(player);
+        txt_readPlayerInformation(id, player);
 
         return;
     }
 
-    player->name = strdup(BUFFER);
+    char *current = strtok(BUFFER, " ");
 
-    semPost();
+    int playerID = (int) strtol(current, NULL, 10);
+
+    char *name = strtok(NULL, " ");
+
+    if (playerID != id) {
+        printf("FAILED TO READ PLAYER. (Same player)");
+
+        closeFP();
+
+        txt_writePlayerInfo(id, name);
+
+        return;
+    }
+
+
+    player->name = strdup(name);
+
+    closeFP();
 }
 
 static void txt_writePiece(Piece *piece) {
@@ -196,7 +369,7 @@ static void txt_repeatPiece() {
 
 PossiblePieces *txt_readPossiblePieces(Game *game) {
 
-    txt_semWait();
+    startRead();
 
     PossiblePieces *pieces = initPossiblePieces(game);
 
@@ -211,7 +384,11 @@ PossiblePieces *txt_readPossiblePieces(Game *game) {
 
     Piece *current = NULL, *prev = NULL;
 
+    printf("There are %ld pieces\n", pieceCount);
+
     for (int i = 0; i < pieceCount; i++) {
+
+        printf("Reading piece... %d\n", i);
 
         current = readPiece(prev);
 
@@ -220,7 +397,7 @@ PossiblePieces *txt_readPossiblePieces(Game *game) {
         prev = current;
     }
 
-    semPost();
+    closeFP();
 
     return pieces;
 }
@@ -233,7 +410,9 @@ static Piece *readPiece(Piece *prev) {
         exit(1);
     }
 
-    if (strcmp(BUFFER, "PIECE") == 0) {
+    printf("Buffer: %s\n", BUFFER);
+
+    if (strcmp(BUFFER, "PIECE\n") == 0) {
 
         int pieceSize;
 
@@ -247,9 +426,13 @@ static Piece *readPiece(Piece *prev) {
 
         name = strdup(splitter);
 
+        printf("Reading piece: %s\n", name);
+
         splitter = strtok(NULL, "-");
 
         pieceSize = (int) strtol(splitter, NULL, 10);
+
+        printf("Piece size: %d\n", pieceSize);
 
         Piece *piece = initPiece(pieceSize, name, readMatrix());
 
@@ -257,7 +440,10 @@ static Piece *readPiece(Piece *prev) {
 
         return piece;
 
-    } else if (strcmp(BUFFER, "REPEAT") == 0) {
+    } else if (strcmp(BUFFER, "REPEAT\n") == 0) {
+
+        printf("REPEAT?\n");
+
         return prev;
     }
 
@@ -290,38 +476,100 @@ static BitMatrix *readMatrix() {
     return matrix;
 }
 
-void txt_waitForOtherPlayerToChoosePieces() {
+void txt_sendGameInfo(Game *game) {
+    startWriter();
 
-    if (!semTryWait()) {
-        //If we are the first ones in, (Nothing on the file) write to the file, so that the other one will see and unlock us
-        //This can block if process 2 enters between process 1 trying to lock and writing to the file, causing writing to be done twice
-        //Not much I can do about that without having to use another named semaphore, so I just decided to leave it be as the odds are pretty low
-        if (fgets(BUFFER, BUFFER_SIZE, fp) == 0) {
-            fprintf(fp, "%d\n", 1);
+    fprintf(fp, "%d %d\n", game->gameID, game->currentPlayerIndex);
 
-            txt_flush();
+    closeFP();
+}
 
-            semWait();
-        } else {
-            semPost();
-        }
+void txt_readGameInfo(Game *game) {
+    startRead();
+
+    if (fgets(BUFFER, BUFFER_SIZE, fp) == 0) {
+        perror("Failed to read game info\n");
+
+        exit(1);
+    }
+
+    char *data = strtok(BUFFER, " ");
+
+    int gameID = (int) strtol(data, NULL, 10);
+
+    data = strtok(NULL, " ");
+
+    int currentPlayer = (int) strtol(data, NULL, 10);
+
+    game->currentPlayerIndex = currentPlayer;
+    game->gameID = gameID;
+
+    closeFP();
+}
+
+static int checkFile() {
+
+    initWriteFP(1);
+
+    if (fgets(BUFFER, BUFFER_SIZE, fp) == 0) {
+
+        closeFP();
+
+        return -1;
+
+    } else {
+
+        int read = (int) strtol(BUFFER, NULL, 10);
+
+        closeFP();
+
+        return read;
     }
 
 }
 
+void txt_waitForOtherPlayerToChoosePieces() {
+
+    int result = checkFile();
+
+    initWriteFP(1);
+
+    ftruncate(fileno(fp), 0);
+
+    fprintf(fp, "%d\n", host);
+
+    closeFP();
+
+    while (result == -1 || result == host) {
+        result = checkFile();
+
+        printf("Reading player ready... %d\n", result);
+
+        sleep(1);
+    }
+
+    initWriteFP(1);
+
+    ftruncate(fileno(fp), 0);
+
+    closeFP();
+
+    printf("Other player ready!\n");
+}
+
 void txt_sendAttemptedPlay(Position *pos, int playerID, int gameID) {
-    txt_semWait();
+    startWriter();
 
     fprintf(fp, "%d %d %d %d\n", pos->x, pos->y, playerID, gameID);
 
     txt_flush();
 
-    semPost();
+    closeFP();
 }
 
 Played txt_receiveAttemptedPlay(int game) {
 
-    txt_semWait();
+    startWriter();
 
     Played p;
 
@@ -371,12 +619,13 @@ void txt_respondToAttemptedPlay(int playerID, HitType hit, int gameID) {
 
     txt_flush();
 
-    semPost();
+    //Close the lock when we are done with the file
+    closeFP();
 }
 
 HitResult txt_receivedAttemptedPlayResult(int gameID) {
 
-    txt_semWait();
+    startRead();
 
     if (fgets(BUFFER, BUFFER_SIZE, fp) == 0) {
         perror("Failed to receive attempted play result.\n");
@@ -407,11 +656,16 @@ HitResult txt_receivedAttemptedPlayResult(int gameID) {
     result.playerID = playerID;
     result.type = hit;
 
-    semPost();
+    closeFP();
 
     return result;
 }
 
 void txt_destroy() {
-    semDestroy();
+
+    initWriteFP(1);
+
+    ftruncate(fileno(fp), 0);
+
+    closeFP();
 }

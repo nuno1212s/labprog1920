@@ -136,6 +136,7 @@ Hit playAt(Game *g, Player *player, Position *pos) {
 
     if (res.hit_type == HR_HIT_BOAT) {
         if (hasBeenDestroyed(otherPlayer->storage, res.hit)) {
+            otherPlayer->currentActivePieceCount--;
             return destroyed();
         }
 
@@ -151,6 +152,19 @@ Hit playAt(Game *g, Player *player, Position *pos) {
 void registerPlayResult(Game *game, Player *player, Position *position, HitType type) {
 
     int result;
+
+    if (type == H_DESTROYED_BOAT) {
+        Player *otherPlayer = NULL;
+
+        for (int i = 0; i < game->playerCount; i++) {
+
+            if (i == game->currentPlayerIndex) continue;
+
+            otherPlayer = game->players[i];
+        }
+
+        otherPlayer->currentActivePieceCount--;
+    }
 
     switch (type) {
         case H_HIT_BOAT:
@@ -174,7 +188,10 @@ int hasFinished(Game *g) {
 
     for (int i = 0; i < g->playerCount; i++) {
 
+        printf("Player %d\n", i);
         Player *p = g->players[i];
+
+        printf("PlayerData %p\n", p);
 
         if (p->currentActivePieceCount == 0) {
             //If the player has no active pieces, then the other player has won
@@ -185,6 +202,7 @@ int hasFinished(Game *g) {
 
     }
 
+    //We get the player that has lost, we want to return the other one
     if (playerThatLost == 0) return 1;
     else if (playerThatLost == 1) return 0;
 

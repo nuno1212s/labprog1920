@@ -28,6 +28,8 @@ int main(int argc, char *argv[]) {
     }
 
     if (split == HOST) {
+        startGame(split);
+        /*
         pid_t pid = fork();
 
         char cwd[1024];
@@ -44,7 +46,7 @@ int main(int argc, char *argv[]) {
 
             startGame(split);
 
-        }
+        }*/
     } else {
         startGame(split);
     }

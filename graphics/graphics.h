@@ -24,6 +24,10 @@ char *g_readPlayerName();
 
 Position *g_readPosition();
 
+void g_displayGameSize(int size);
+
+void g_displayOpponentName(char *name);
+
 void g_alreadyPlayedThere();
 
 void g_missed();
@@ -43,6 +47,8 @@ void g_showAllPlaced();
 int g_requestPieceToPlay(int maxSize);
 
 PlacedDirection g_readPlaceDirection();
+
+void g_waitingForOpponent();
 
 void g_showYourTurn(Player*player);
 

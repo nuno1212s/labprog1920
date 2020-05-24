@@ -14,6 +14,10 @@ Position *sh_readPosition();
 
 void sh_alreadyPlayedThere();
 
+void sh_displayGameSize(int);
+
+void sh_displayOpponentName(char *);
+
 void sh_missed();
 
 void sh_hitBoat();
@@ -25,6 +29,8 @@ void sh_showPlaceablePieces(Player *, PossiblePieces *, PieceInBoard **placed);
 void sh_showNotPossibleToPlace(Piece *, Position *);
 
 void sh_showPiecePlaced(Piece *, Position *);
+
+void sh_waitingForOpponent();
 
 void sh_showAllPlaced();
 

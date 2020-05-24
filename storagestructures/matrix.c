@@ -11,7 +11,7 @@ Matrix *initMatrix(int size) {
 
     for (int i = 0; i < size; i++) {
 
-        matrix->matrixData[i] = malloc(sizeof(void *) * size);
+        matrix->matrixData[i] = calloc(size, sizeof(void*));
 
     }
 
@@ -36,14 +36,14 @@ void m_insert(Matrix *matrix, Position *pos, void *value) {
 }
 
 void *m_delete(Matrix *matrix, Position *pos) {
-    void * result = matrix->matrixData[p_getBaseX(pos)][p_getBaseY(pos)];
+    void *result = matrix->matrixData[p_getBaseX(pos)][p_getBaseY(pos)];
 
     matrix->matrixData[p_getBaseX(pos)][p_getBaseY(pos)] = NULL;
 
     return result;
 }
 
-void m_iterateAllPoints(Matrix *matrix, void (*toCall) (void *)) {
+void m_iterateAllPoints(Matrix *matrix, void (*toCall)(void *)) {
 
     for (int x = 0; x < matrix->size; x++) {
 

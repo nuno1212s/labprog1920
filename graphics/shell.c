@@ -8,6 +8,9 @@ static void showPlayerTray(Player *player);
 
 PossiblePieces *sh_readPossiblePieces(Game *game) {
 
+    createDefaultPossiblePieces(game, game->size);
+
+    return game->p;
 }
 
 int sh_readGameSize() {
@@ -49,8 +52,8 @@ Position *sh_readPosition() {
     printf("X: ");
     scanf("%d\n", &x);
 
-    printf("Y:");
-    scanf("%d", &y);
+    printf("Y: ");
+    scanf("%d\n", &y);
 
     Position *pos = initPos(x, y);
 
@@ -91,8 +94,14 @@ void showPlayerTray(Player *player) {
 
     int size = player->storage->size;
 
+    printf("     ");
+
     for (int i = 0; i < size; i++) {
+        if (size < 10) printf("    ");
+
         printf("%d ", i);
+
+        if (size < 10) printf("  ");
     }
 
     printf("\n");
@@ -100,10 +109,14 @@ void showPlayerTray(Player *player) {
     for (int row = size; row >= 0; row--) {
 
         for (int i = 0; i < size; i++) {
-            printf("--");
+            printf("----");
         }
 
         printf("\n");
+
+        if (row < 10) printf(" ");
+
+        printf("%d ", row);
 
         for (int column = 0; column < size; column++) {
 
@@ -111,34 +124,38 @@ void showPlayerTray(Player *player) {
 
             printf("|");
 
+            char toPrint[4] = "  ";
+
             void *result = getAtPosition(storage, &p);
 
             if (result == NULL) {
-                printf(".");
+                toPrint[1] = '.';
             } else {
 
                 PointStorage *ps = (PointStorage *) result;
 
                 if (ps->piece != NULL) {
-                    printf("#");
+                    toPrint[0] = '#';
                 }
 
                 if (ps->ownHitPoint != NULL) {
                     if (ps->ownHitPoint->hit) {
-                        printf("*");
+                        toPrint[1] = '*';
                     } else {
-                        printf("+");
+                        toPrint[1] = '+';
                     }
                 }
 
                 if (ps->opponentHitPoint != NULL) {
                     if (ps->opponentHitPoint->hit) {
-                        printf("*");
+                        toPrint[2] = '*';
                     } else {
-                        printf("=");
+                        toPrint[2] = '=';
                     }
                 }
             }
+
+            printf("%s", toPrint);
         }
 
         printf("|\n");
@@ -159,7 +176,7 @@ void sh_showPlaceablePieces(Player *game, PossiblePieces *piece, PieceInBoard **
 
     for (int i = 0; i < pieceCount; i++) {
 
-        printf("%d) %s", i, game->name);
+        printf("%d) %s", i, getPieceWithId(piece, i)->name);
 
         if (placed[i] != NULL) {
             placedPieces++;
@@ -176,6 +193,11 @@ void sh_showPlaceablePieces(Player *game, PossiblePieces *piece, PieceInBoard **
     }
 }
 
+
+void sh_waitingForOpponent() {
+    printf("Waiting for your opponent...\n");
+}
+
 void sh_showNotPossibleToPlace(Piece *piece, Position *pos) {
 
     printf("You cannot place the piece %s in the postion (%d, %d).\n", piece->name, p_getBaseX(pos), p_getBaseY(pos));
@@ -185,9 +207,17 @@ void sh_showNotPossibleToPlace(Piece *piece, Position *pos) {
 
 void sh_showPiecePlaced(Piece *piece, Position *pos) {
 
-    printf("The piece %s has been placed in the position (%d, %d)\n" , piece->name, p_getBaseX(pos), p_getBaseY(pos));
+    printf("The piece %s has been placed in the position (%d, %d)\n", piece->name, p_getBaseX(pos), p_getBaseY(pos));
 
     sleep(2);
+}
+
+void sh_displayGameSize(int size) {
+    printf("The chosen game size is %d\n", size);
+}
+
+void sh_displayOpponentName(char *name) {
+    printf("The opponents name is %s\n", name);
 }
 
 void sh_showAllPlaced() {
@@ -244,8 +274,6 @@ void sh_showYourTurn(Player *player) {
 }
 
 void sh_showOtherTurn(Player *player) {
-    showPlayerTray(player);
-
     printf("It's %s's turn to play.\n", player->name);
 
     printf("Wait for his move.\n");

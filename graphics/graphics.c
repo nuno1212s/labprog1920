@@ -53,6 +53,32 @@ Position *g_readPosition() {
     }
 }
 
+void g_waitingForOpponent() {
+    switch (graphicsType) {
+        case SHELL:
+            sh_waitingForOpponent();
+            break;
+    }
+}
+
+void g_displayGameSize(int gameSize) {
+
+    switch (graphicsType) {
+        case SHELL:
+            sh_displayGameSize(gameSize);
+            break;
+    }
+
+}
+
+void g_displayOpponentName(char *name) {
+    switch (graphicsType) {
+        case SHELL:
+            sh_displayOpponentName(name);
+            break;
+    }
+}
+
 void g_alreadyPlayedThere() {
 
     switch (graphicsType) {

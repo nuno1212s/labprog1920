@@ -52,17 +52,17 @@ void c_sendPossiblePieces(PossiblePieces *pieces) {
 
 }
 
-void c_readPlayerInformation(Player *player) {
+void c_readPlayerInformation(int id, Player *player) {
 
 #ifdef TEXT
-    txt_readPlayerInformation(player);
+    txt_readPlayerInformation(id, player);
 #endif
 }
 
-void c_sendPlayerInformation(Player *player) {
+void c_sendPlayerInformation(int id, Player *player) {
 
 #ifdef TEXT
-    txt_sendPlayerInformation(player);
+    txt_sendPlayerInformation(id, player);
 #endif
 
 }
@@ -77,6 +77,21 @@ void c_sendAttemptedPlay(Position *pos, int playerID, int gameID) {
 #ifdef TEXT
     txt_sendAttemptedPlay(pos, playerID, gameID);
 #endif
+}
+
+void c_sendGameInfo(Game *game) {
+#ifdef TEXT
+    txt_sendGameInfo(game);
+#endif
+
+}
+
+void c_readGameInfo(Game *game) {
+
+#ifdef TEXT
+    txt_readGameInfo(game);
+#endif
+
 }
 
 Played c_receiveAttemptedPlay(int gameID) {
