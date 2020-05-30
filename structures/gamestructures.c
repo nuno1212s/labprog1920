@@ -24,11 +24,7 @@ static void freeStorage(void *);
 #include "../storagestructures/quadtree.h"
 
 void *initStorage(int size) {
-
-    Position topLeft = {0, size}, bottomRight = {size, 0};
-
-    return initQuadTree(&topLeft, &bottomRight);
-
+    return initQuadTree(size);
 }
 
 void *lookUp(void *storage, Position *pos) {
