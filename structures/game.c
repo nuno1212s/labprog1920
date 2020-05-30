@@ -188,10 +188,7 @@ int hasFinished(Game *g) {
 
     for (int i = 0; i < g->playerCount; i++) {
 
-        printf("Player %d\n", i);
         Player *p = g->players[i];
-
-        printf("PlayerData %p\n", p);
 
         if (p->currentActivePieceCount == 0) {
             //If the player has no active pieces, then the other player has won

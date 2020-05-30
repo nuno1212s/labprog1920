@@ -10,12 +10,21 @@
 #define HOST 1
 #define SLAVE 0
 
-int main(int argc, char *argv[]) {
-    printf("Hello, World!\n");
+static void initShells(int argc, char *argv[]);
 
-    for (int i = 0; i < argc; i++) {
-        printf("Arg %d: %s \n", i, argv[i]);
-    }
+#define ONE_SHELL
+
+#ifdef ONE_SHELL
+
+void initShells(int argc, char *argv[]) {
+
+    startGame(1);
+
+}
+
+#elif defined(TWO_SHELL)
+
+void initShells(int argc, char *argv[]) {
 
     int split = 0;
 
@@ -28,8 +37,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (split == HOST) {
-        startGame(split);
-        /*
+//        startGame(split);
         pid_t pid = fork();
 
         char cwd[1024];
@@ -46,10 +54,18 @@ int main(int argc, char *argv[]) {
 
             startGame(split);
 
-        }*/
+        }
     } else {
         startGame(split);
     }
+}
+
+#endif
+
+int main(int argc, char *argv[]) {
+    printf("Hello, World!\n");
+
+    initShells(argc, argv);
 
     return 0;
 }

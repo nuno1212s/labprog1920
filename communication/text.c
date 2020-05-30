@@ -239,11 +239,30 @@ void txt_block() {
     isBlocking = 1;
 }
 
+static char * readFromFP() {
+
+    char * result;
+
+    if ((result = fgets(BUFFER, BUFFER_SIZE, fp)) == 0) return NULL;
+
+    for (int i = 0; ; i++) {
+
+        if (result[i] == '\n') {
+            result[i] = '\0';
+            break;
+        }
+
+    }
+
+    return result;
+
+}
+
 int txt_readGameSize() {
 
     startRead();
 
-    if (fgets(BUFFER, BUFFER_SIZE, fp) == 0) {
+    if (readFromFP() == 0) {
         failAndWait();
 
         return txt_readGameSize();
@@ -340,7 +359,6 @@ void txt_readPlayerInformation(int id, Player *player) {
 
         return;
     }
-
 
     player->name = strdup(name);
 
@@ -441,9 +459,6 @@ static Piece *readPiece(Piece *prev) {
         return piece;
 
     } else if (strcmp(BUFFER, "REPEAT\n") == 0) {
-
-        printf("REPEAT?\n");
-
         return prev;
     }
 
@@ -452,7 +467,7 @@ static Piece *readPiece(Piece *prev) {
 
 static BitMatrix *readMatrix() {
 
-    BitMatrix *matrix = createBitMatrix(MATRIX_ROWS, MATRIX_COLS, MATRIX_WORD_SIZE);
+    BitMatrix *matrix = createBitMatrix(PIECE_MATRIX_ROWS, PIECE_MATRIX_COLS, MATRIX_WORD_SIZE);
 
     if (fgets(BUFFER, BUFFER_SIZE, fp) == 0) {
         perror("FAILED TO READ MATRIX.");
@@ -462,8 +477,8 @@ static BitMatrix *readMatrix() {
 
     char *current = strtok(BUFFER, " ");
 
-    for (int row = 0; row < MATRIX_ROWS; row++) {
-        for (int col = 0; col < MATRIX_COLS; col++) {
+    for (int row = 0; row < PIECE_MATRIX_ROWS; row++) {
+        for (int col = 0; col < PIECE_MATRIX_COLS; col++) {
 
             unsigned int value = (unsigned int) strtol(current, NULL, 10);
 
@@ -541,11 +556,16 @@ void txt_waitForOtherPlayerToChoosePieces() {
     closeFP();
 
     while (result == -1 || result == host) {
+        sleep(1);
+
         result = checkFile();
 
-        printf("Reading player ready... %d\n", result);
+        if (result == -1) {
+            //Seems kind of weird, but this prevents the result from reading -1 after the other user has deleted the file (Notification that he has read and also is ready)
+            break;
+        }
 
-        sleep(1);
+        printf("Reading player ready... %d (we are %d)\n", result, host);
     }
 
     initWriteFP(1);
@@ -569,7 +589,7 @@ void txt_sendAttemptedPlay(Position *pos, int playerID, int gameID) {
 
 Played txt_receiveAttemptedPlay(int game) {
 
-    startWriter();
+    startRead();
 
     Played p;
 
@@ -609,11 +629,16 @@ Played txt_receiveAttemptedPlay(int game) {
 
         exit(1);
     }
+
+    closeFP();
+
     //We don't want to release the semaphore until the response is given, as it could cause some major issues with deadlocks
     return p;
 }
 
 void txt_respondToAttemptedPlay(int playerID, HitType hit, int gameID) {
+
+    startWriter();
 
     fprintf(fp, "%d %d %d\n", playerID, hit, gameID);
 

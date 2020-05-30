@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <math.h>
 
-
 BitMatrix *createBitMatrix(unsigned int rows, unsigned int columns, unsigned int word_size) {
 
     BitMatrix *matrix = malloc(sizeof(BitMatrix));
@@ -55,7 +54,7 @@ BitMap *createBitMap(unsigned int size, unsigned int word_size) {
 
     BitMap *map = malloc(sizeof(BitMap));
 
-    unsigned int charSize = sizeof(unsigned char) * 8;
+    unsigned int charSize = sizeof(unsigned char);
 
     unsigned int finalSize = ((word_size * size) / charSize) + 1;
 

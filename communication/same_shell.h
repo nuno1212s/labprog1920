@@ -3,9 +3,13 @@
 
 #include "communications.h"
 
+void ssh_init();
+
 int ssh_readGameSize();
 
 void ssh_writeGameSize(int);
+
+void ssh_sendGameInfo(Game *);
 
 void ssh_readPlayerInformation(Player *);
 

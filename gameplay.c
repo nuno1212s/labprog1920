@@ -187,8 +187,86 @@ void placePieces(Game *game, Player *player) {
     g_waitingForOpponent();
 
     c_waitForOtherPlayerToChoosePieces();
+}
 
+int myTurn(Game *game) {
 
+    c_block();
+
+    int currentPlayer = game->currentPlayerIndex;
+
+    Player *playerData = getCurrentPlayer(game);
+
+    g_showYourTurn(playerData);
+
+    Position *toPlayAt = g_readPosition();
+
+    if (hasPlayedAt(playerData, toPlayAt)) {
+
+        g_alreadyPlayedThere();
+
+        p_free(toPlayAt);
+
+        return 0;
+    }
+
+    c_sendAttemptedPlay(toPlayAt, game->currentPlayerIndex, game->gameID);
+
+    HitResult result = c_receivedAttemptedPlayResult(game->gameID);
+
+    if (result.playerID != playerID) {
+        perror("FAILED TO LOAD RESULT FOR PLAY");
+
+        exit(1);
+    }
+
+    registerPlayResult(game, playerData, toPlayAt, result.type);
+
+    p_free(toPlayAt);
+
+    switch (result.type) {
+
+        case H_ALREADY_HIT:
+            g_alreadyPlayedThere();
+            break;
+        case H_DESTROYED_BOAT:
+            g_destroyedBoat();
+            break;
+        case H_HIT_BOAT:
+            g_hitBoat();
+            break;
+        case H_MISSED:
+            g_missed();
+            break;
+
+    }
+
+    if (result.type == H_MISSED || result.type == H_ALREADY_HIT) {
+        if (currentPlayer == game->currentPlayerIndex) {
+            //Playing in one shell causes some bugs with the player turns
+            goToNextPlayer(game);
+        }
+    }
+
+    return 1;
+}
+
+void otherPlayerTurn(Game *game) {
+    Player *current = getCurrentPlayer(game);
+
+    g_showOtherTurn(current);
+
+    Played played = c_receiveAttemptedPlay(game->gameID);
+
+    if (played.playerID != game->currentPlayerIndex) {
+        perror("FAILED TO LOAD RESULT FOR ATTEMPTED PLAY");
+
+        exit(1);
+    }
+
+    Hit result = playAt(game, current, played.pos);
+
+    c_respondToAttemptedPlay(played.playerID, result.hitType, game->gameID);
 }
 
 void runGame(Game *game) {
@@ -201,73 +279,10 @@ void runGame(Game *game) {
 
         if (game->currentPlayerIndex == playerID) {
 
-            c_block();
+            myTurn(game);
 
-            Player *playerData = getCurrentPlayer(game);
-
-            g_showYourTurn(playerData);
-
-            Position *toPlayAt = g_readPosition();
-
-            if (hasPlayedAt(playerData, toPlayAt)) {
-
-                g_alreadyPlayedThere();
-
-                p_free(toPlayAt);
-
-                continue;
-            }
-
-            c_sendAttemptedPlay(toPlayAt, game->currentPlayerIndex, game->gameID);
-
-            HitResult result = c_receivedAttemptedPlayResult(game->gameID);
-
-            if (result.playerID != playerID) {
-                perror("FAILED TO LOAD RESULT FOR PLAY");
-
-                exit(1);
-            }
-
-            registerPlayResult(game, playerData, toPlayAt, result.type);
-
-            p_free(toPlayAt);
-
-            switch (result.type) {
-
-                case H_ALREADY_HIT:
-                    g_alreadyPlayedThere();
-                    break;
-                case H_DESTROYED_BOAT:
-                    g_destroyedBoat();
-                    break;
-                case H_HIT_BOAT:
-                    g_hitBoat();
-                    break;
-                case H_MISSED:
-                    g_missed();
-                    break;
-
-            }
         } else {
-            Player *current = getCurrentPlayer(game);
-
-            printf("Hello\n");
-
-            g_showOtherTurn(current);
-            printf("Hello 2\n");
-
-            Played played = c_receiveAttemptedPlay(game->gameID);
-
-            printf("Hello 3\n");
-            if (played.playerID != game->currentPlayerIndex) {
-                perror("FAILED TO LOAD RESULT FOR ATTEMPTED PLAY");
-
-                exit(1);
-            }
-
-            Hit result = playAt(game, current, played.pos);
-
-            c_respondToAttemptedPlay(played.playerID, result.hitType, game->gameID);
+            otherPlayerTurn(game);
         }
 
     }

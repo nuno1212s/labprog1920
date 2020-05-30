@@ -5,8 +5,8 @@
 #include "../storagestructures/bitmap.h"
 
 #define MATRIX_WORD_SIZE 1
-#define MATRIX_ROWS 5
-#define MATRIX_COLS 5
+#define PIECE_MATRIX_ROWS 5
+#define PIECE_MATRIX_COLS 5
 
 struct Piece_ {
 

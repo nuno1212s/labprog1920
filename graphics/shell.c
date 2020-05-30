@@ -34,7 +34,7 @@ char *sh_readPlayerName() {
 
     char *playerNameBuffer = malloc(sizeof(char) * MAX_PLAYER_NAME_SIZE);
 
-    printf("Insert your name here: (Max of %d characters)\n", MAX_PLAYER_NAME_SIZE);
+    printf("Insert your name here: (Max of %d characters and no spaces)\n", MAX_PLAYER_NAME_SIZE);
 
     scanf("%24s", playerNameBuffer);
 
@@ -50,10 +50,10 @@ Position *sh_readPosition() {
     int x, y;
 
     printf("X: ");
-    scanf("%d\n", &x);
+    scanf("%d", &x);
 
     printf("Y: ");
-    scanf("%d\n", &y);
+    scanf("%d", &y);
 
     Position *pos = initPos(x, y);
 
@@ -167,6 +167,8 @@ void showPlayerTray(Player *player) {
 void sh_showPlaceablePieces(Player *game, PossiblePieces *piece, PieceInBoard **placed) {
 
     //system("clear");
+
+    printf("Insert your pieces in the desired position %s\n", game->name);
 
     showPlayerTray(game);
 

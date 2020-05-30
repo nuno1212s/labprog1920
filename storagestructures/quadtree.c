@@ -1,5 +1,6 @@
 #include "quadtree.h"
 #include <stdlib.h>
+#include <math.h>
 #include <stdio.h>
 
 #define NODE_MAX_CHILDREN 4
@@ -10,35 +11,38 @@ typedef enum {
     I_FAILED_FULL
 } INSERT_RESULT;
 
-struct QuadNode_ *initLeaf(Position *, Position *);
+static struct QuadNode_ *initLeaf(Position *, int);
 
-int isContainedInside(Position *, Position *topLeft, Position *bottomRight);
+static int isContainedInside(Position *, Position *bottomLeft, int dimension);
 
-struct QuadNode_ *divideLeafNode(struct QuadNode_ *);
+static struct QuadNode_ *divideLeafNode(struct QuadNode_ *);
 
-INSERT_RESULT insertIntoNode(struct Node_ *node, QuadPoint *pos);
+static INSERT_RESULT insertIntoNode(struct Node_ *node, QuadPoint *pos);
 
-INSERT_RESULT insertIntoLeaf(struct LeafNode_ *node, QuadPoint *pos);
+static INSERT_RESULT insertIntoLeaf(struct LeafNode_ *node, QuadPoint *pos);
 
-QuadPoint *initQuadPoint(Position *, void *);
+static QuadPoint *initQuadPoint(Position *, void *);
 
-void freeQuadPoint(QuadPoint *);
+static void freeQuadPoint(QuadPoint *);
 
-QuadPoint *lookupQuad(struct QuadNode_ *node, Position *pos);
+static QuadPoint *lookupQuad(struct QuadNode_ *node, Position *pos);
 
-QuadPoint *lookupNode(struct Node_ *node, Position *pos);
+static QuadPoint *lookupNode(struct Node_ *node, Position *pos);
 
-QuadPoint *lookupLeaf(struct LeafNode_ *node, Position *pos);
+static QuadPoint *lookupLeaf(struct LeafNode_ *node, Position *pos);
 
-QuadPoint* deleteQuad(struct QuadNode_ *, Position *);
+static QuadPoint *deleteQuad(struct QuadNode_ *, Position *);
 
 void freeQuadNode(struct QuadNode_ *node);
 
-QuadTree *initQuadTree(Position *topLeft, Position *bottomRight) {
+QuadTree *initQuadTree(int dimensions) {
 
     QuadTree *quadTree = malloc(sizeof(QuadTree));
 
-    quadTree->rootNode = initLeaf(topLeft, bottomRight);
+    //Use powers of 2 to make it divisible all the way to 0
+    int closestNextPowerOf2 = (int) pow(2, (int) sqrt(dimensions) + 1);
+
+    quadTree->rootNode = initLeaf(initPos(0, 0), closestNextPowerOf2);
 
     return quadTree;
 }
@@ -58,12 +62,13 @@ void *getValue(QuadPoint *point) {
     return point->value;
 }
 
-struct QuadNode_ *initQuadNode(Position *topLeft, Position *bottomRight, NodeKind kind, void *nodeValue) {
+struct QuadNode_ *initQuadNode(Position *bottomLeft, int dimension, NodeKind kind, void *nodeValue) {
 
     struct QuadNode_ *node = malloc(sizeof(struct QuadNode_));
 
-    node->topLeft = clonePos(topLeft);
-    node->bottomRight = clonePos(bottomRight);
+    node->bottomLeft = clonePos(bottomLeft);
+
+    node->dimension = dimension;
 
     node->nodeKind = kind;
 
@@ -82,39 +87,44 @@ struct QuadNode_ *initQuadNode(Position *topLeft, Position *bottomRight, NodeKin
     return node;
 }
 
-struct QuadNode_ *initNode(Position *topLeft, Position *bottomRight) {
+static int directions[NODE_MAX_CHILDREN][2] = {{1, 1},
+                                               {0, 1},
+                                               {0, 0},
+                                               {1, 0}};
+
+/**
+ * Creates a middle node that contains 4 children.
+ *
+ * @param bottomLeft
+ * @param dimension
+ * @return
+ */
+struct QuadNode_ *initNode(Position *bottomLeft, int dimension) {
 
     struct Node_ *node = malloc(sizeof(struct Node_));
 
     node->children = malloc(NODE_MAX_CHILDREN * sizeof(struct QuadTree_ *));
 
-    int midX = (p_getBaseX(topLeft) + p_getBaseX(bottomRight)) / 2,
-            midY = (p_getBaseY(topLeft) + p_getBaseY(bottomRight)) / 2;
-
     //Allocate positions in the stack as it's much faster
     //And these positions are disposable anyway
-    Position mid = {midX, midY},
-            topMid = {midX, p_getBaseY(topLeft)},
-            midRight = {p_getBaseX(bottomRight), midY},
-            midLeft = {p_getBaseX(topLeft), midY},
-            bottomMid = {midX, p_getBaseY(bottomRight)};
+    Position currentBottomLeft = {p_getBaseX(bottomLeft), p_getBaseY(bottomLeft)};
 
-    struct QuadNode_ *topLeftChild = initLeaf(topLeft, &mid),
-            *topRightChild = initLeaf(&topMid, &midRight),
-            *bottomLeftChild = initLeaf(&midLeft, &bottomMid),
-            *bottomRightChild = initLeaf(&mid, bottomRight);
+    int childDimension = dimension / 2;
 
-    node->children[0] = topLeftChild;
-    node->children[1] = topRightChild;
-    node->children[2] = bottomLeftChild;
-    node->children[3] = bottomRightChild;
+    for (int i = 0; i < NODE_MAX_CHILDREN; i++) {
 
-    node->stored = 4;
+        Position newBottomLeft = {p_getBaseX((&currentBottomLeft)) + directions[i][0] * childDimension,
+                                  p_getBaseY((&currentBottomLeft)) + directions[i][1] * childDimension};
 
-    return initQuadNode(topLeft, bottomRight, QT_NODE, node);
+        node->children[i] = initLeaf(&newBottomLeft, childDimension);
+    }
+
+    node->stored = NODE_MAX_CHILDREN;
+
+    return initQuadNode(bottomLeft, dimension, QT_NODE, node);
 }
 
-struct QuadNode_ *initLeaf(Position *topLeft, Position *bottomRight) {
+struct QuadNode_ *initLeaf(Position *bottomLeft, int dimension) {
 
     struct LeafNode_ *leaf = malloc(sizeof(struct LeafNode_));
 
@@ -122,12 +132,12 @@ struct QuadNode_ *initLeaf(Position *topLeft, Position *bottomRight) {
 
     leaf->stored = 0;
 
-    return initQuadNode(topLeft, bottomRight, QT_LEAF, leaf);
+    return initQuadNode(bottomLeft, dimension, QT_LEAF, leaf);
 }
 
 INSERT_RESULT insertNode(struct QuadNode_ *node, QuadPoint *pos) {
 
-    if (!isContainedInside(pos->pos, node->topLeft, node->bottomRight)) {
+    if (!isContainedInside(pos->pos, node->bottomLeft, node->dimension)) {
         return I_FAILED_NOT_INSIDE;
     }
 
@@ -207,7 +217,7 @@ void *qt_lookup(QuadTree *quad, Position *pos) {
 
     struct QuadNode_ *node = quad->rootNode;
 
-    QuadPoint * point = lookupQuad(node, pos);
+    QuadPoint *point = lookupQuad(node, pos);
 
     if (point != NULL) {
         return point->value;
@@ -217,7 +227,7 @@ void *qt_lookup(QuadTree *quad, Position *pos) {
 
 QuadPoint *lookupQuad(struct QuadNode_ *node, Position *pos) {
 
-    if (!isContainedInside(pos, node->topLeft, node->bottomRight)) return NULL;
+    if (!isContainedInside(pos, node->bottomLeft, node->dimension)) return NULL;
 
     switch (node->nodeKind) {
 
@@ -325,7 +335,7 @@ QuadPoint *deleteNode(struct Node_ *node, Position *pos) {
 
 QuadPoint *deleteQuad(struct QuadNode_ *node, Position *pos) {
 
-    if (!isContainedInside(pos, node->topLeft, node->bottomRight)) return NULL;
+    if (!isContainedInside(pos, node->bottomLeft, node->dimension)) return NULL;
 
     switch (node->nodeKind) {
 
@@ -350,8 +360,9 @@ struct QuadNode_ *divideLeafNode(struct QuadNode_ *node) {
         exit(1);
     }
 
-    struct QuadNode_ *newNode = initNode(node->topLeft, node->bottomRight);
+    struct QuadNode_ *newNode = initNode(node->bottomLeft, node->dimension);
 
+    //Move the stored points into the new nodes
     for (int i = 0; i < node->leaf->stored; i++) {
 
         insertNode(newNode, node->leaf->positions[i]);
@@ -363,14 +374,15 @@ struct QuadNode_ *divideLeafNode(struct QuadNode_ *node) {
     return newNode;
 }
 
-int isContainedInside(Position *point, Position *topLeft, Position *bottomRight) {
+int isContainedInside(Position *point, Position *bottomLeft, int dimension) {
 
     int x = p_getBaseX(point), y = p_getBaseY(point);
 
-    int tX = p_getBaseX(topLeft), tY = p_getBaseY(topLeft),
-            bX = p_getBaseX(bottomRight), bY = p_getBaseY(bottomRight);
+    int base_X = p_getBaseX(bottomLeft), base_Y = p_getBaseY(bottomLeft),
+            large_X = base_X + dimension, large_Y = base_Y + dimension;
 
-    return tX <= x && x <= bX && bY <= y && y <= tY;
+
+    return base_X <= x && x <= large_X && base_Y <= y && y <= large_Y;
 
 }
 
@@ -395,8 +407,7 @@ void freeQuadNode(struct QuadNode_ *node) {
         }
     }
 
-    p_free(node->topLeft);
-    p_free(node->bottomRight);
+    p_free(node->bottomLeft);
 
     free(node);
 }
@@ -423,11 +434,11 @@ void disposeOfLeafNode(struct LeafNode_ *leaf) {
 
 }
 
-void iterateAllPointsNode(struct QuadNode_ *node, void (*toCall)(void*));
+void iterateAllPointsNode(struct QuadNode_ *node, void (*toCall)(void *));
 
-void iterateAllPointsQtNode(struct Node_ *node, void (*toCall)(void*)) {
+void iterateAllPointsQtNode(struct Node_ *node, void (*toCall)(void *)) {
 
-    for (int i = 0; i < node->stored; i ++) {
+    for (int i = 0; i < node->stored; i++) {
 
         iterateAllPointsNode(node->children[i], toCall);
 
@@ -444,7 +455,7 @@ void iterateAllPointQtLeaf(struct LeafNode_ *leaf, void (*toCall)(void *)) {
     }
 }
 
-void iterateAllPointsNode(struct QuadNode_ *node, void (*toCall)(void*)) {
+void iterateAllPointsNode(struct QuadNode_ *node, void (*toCall)(void *)) {
 
     switch (node->nodeKind) {
         case QT_LEAF:
@@ -458,7 +469,7 @@ void iterateAllPointsNode(struct QuadNode_ *node, void (*toCall)(void*)) {
 
 }
 
-void q_iterateAllPoints(QuadTree * tree, void (*toCall)(void*)) {
+void q_iterateAllPoints(QuadTree *tree, void (*toCall)(void *)) {
 
     iterateAllPointsNode(tree->rootNode, toCall);
 
@@ -495,7 +506,7 @@ void printQuadNode(struct Node_ *quadNode) {
 
 void printQuadLeaf(struct LeafNode_ *quadLeaf) {
 
-    for (int i = 0; i < quadLeaf->stored; i++ ){
+    for (int i = 0; i < quadLeaf->stored; i++) {
 
         QuadPoint *qp = quadLeaf->positions[i];
 

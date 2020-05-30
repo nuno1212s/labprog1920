@@ -17,7 +17,9 @@ struct QuadTree_ {
 
 struct QuadNode_ {
 
-    Position *topLeft, *bottomRight;
+    Position *bottomLeft;
+
+    int dimension;
 
     NodeKind nodeKind;
 
@@ -60,12 +62,10 @@ typedef struct QuadPoint_ QuadPoint;
 typedef struct QuadTree_ QuadTree;
 
 /**
- * Creates a quadTree with the given topLeft and bottomRight positions
- *
- * These positions are cloned so they can be safely deleted afterwards
+ * Creates a quadTree with the given dimensions
  * @return
  */
-QuadTree *initQuadTree(Position *topLeft, Position *bottomRight);
+QuadTree *initQuadTree(int dimensions);
 
 void *getValue(QuadPoint *);
 
