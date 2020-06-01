@@ -177,11 +177,12 @@ void placePieces(Game *game, Player *player) {
         if (piecePlaced == NULL) {
             g_showNotPossibleToPlace(piece, pos);
         } else {
-            p_free(pos);
             g_showPiecePlaced(piece, pos);
 
             hasBeenPlaced[pieceID] = piecePlaced;
         }
+
+        p_free(pos);
     }
 
     g_waitingForOpponent();
@@ -267,6 +268,9 @@ void otherPlayerTurn(Game *game) {
     Hit result = playAt(game, current, played.pos);
 
     c_respondToAttemptedPlay(played.playerID, result.hitType, game->gameID);
+
+    //Free the position from the Played
+    p_free(played.pos);
 }
 
 void runGame(Game *game) {

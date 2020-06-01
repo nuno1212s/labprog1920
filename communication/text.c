@@ -561,7 +561,8 @@ void txt_waitForOtherPlayerToChoosePieces() {
         result = checkFile();
 
         if (result == -1) {
-            //Seems kind of weird, but this prevents the result from reading -1 after the other user has deleted the file (Notification that he has read and also is ready)
+            //Seems kind of weird, but this prevents the result from reading -1 after the other user has
+            //deleted the file (Notification that he has read and also is ready)
             break;
         }
 

@@ -1,18 +1,15 @@
 #include <stdio.h>
 
 #include "graphics/graphics.h"
-#include "communication/sem.h"
 #include <unistd.h>
 #include <stdlib.h>
-
-#include "communication/communications.h"
 
 #define HOST 1
 #define SLAVE 0
 
 static void initShells(int argc, char *argv[]);
 
-#define ONE_SHELL
+#define TWO_SHELL
 
 #ifdef ONE_SHELL
 

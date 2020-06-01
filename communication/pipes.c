@@ -1,6 +1,5 @@
 #include "pipes.h"
 #include "sem.h"
-#include "../structures/pieces.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -155,6 +154,12 @@ static void startWriter() {
     markWriter();
 }
 
+static void startWriterWithoutMark() {
+    currentPosition = 0;
+
+    attemptSemLock();
+}
+
 static void startReader() {
     currentPosition = 0;
 
@@ -183,15 +188,28 @@ static void endWriter() {
     finishSemLock();
 }
 
+static void writeToBuffer(void *toWrite, size_t size) {
+
+    memcpy(mem_addr + currentPosition, toWrite, size);
+
+    currentPosition += size;
+
+}
+
+static void readFromBuffer(void *toRead, size_t size) {
+
+    memcpy(toRead, mem_addr + currentPosition, size);
+
+    currentPosition += size;
+}
+
 int p_readGameSize() {
 
     startReader();
 
     int read;
 
-    memcpy(&read, mem_addr + currentPosition, sizeof(int));
-
-    currentPosition += sizeof(int);
+    readFromBuffer(&read, sizeof(int));
 
     endReader();
 
@@ -202,9 +220,7 @@ void p_writeGameSize(int gameSize) {
 
     startWriter();
 
-    memcpy(mem_addr + currentPosition, &gameSize, sizeof(int));
-
-    currentPosition += sizeof(int);
+    writeToBuffer(&gameSize, sizeof(int));
 
     endWriter();
 }
@@ -215,9 +231,7 @@ void p_readPlayerInformation(int id, Player *p) {
 
     int playerID;
 
-    memcpy(&playerID, mem_addr + currentPosition, sizeof(int));
-
-    currentPosition += sizeof(int);
+    readFromBuffer(&playerID, sizeof(int));
 
     if (playerID != id) {
         perror("FAILED TO READ PLAYER. (SAME ID)");
@@ -229,9 +243,7 @@ void p_readPlayerInformation(int id, Player *p) {
 
     char *name = malloc(sizeof(char) * MAX_PLAYER_NAME_SIZE);
 
-    memcpy(name, mem_addr + currentPosition, sizeof(char) * MAX_PLAYER_NAME_SIZE);
-
-    currentPosition += sizeof(char) * MAX_PLAYER_NAME_SIZE;
+    readFromBuffer(name, sizeof(char) * MAX_PLAYER_NAME_SIZE);
 
     p->name = name;
 
@@ -242,13 +254,9 @@ void p_sendPlayerInformation(int id, Player *p) {
 
     startWriter();
 
-    memcpy(mem_addr + currentPosition, &id, sizeof(int));
+    writeToBuffer(&id, sizeof(int));
 
-    currentPosition += sizeof(int);
-
-    memcpy(mem_addr + currentPosition, p->name, sizeof(char) * MAX_PLAYER_NAME_SIZE);
-
-    currentPosition += sizeof(char) * MAX_PLAYER_NAME_SIZE;
+    writeToBuffer(p->name, sizeof(char) * MAX_PLAYER_NAME_SIZE);
 
     endWriter();
 }
@@ -257,39 +265,31 @@ static void writeMatrix(BitMatrix *matrix);
 
 static void p_repeat() {
 
-    mem_addr[currentPosition] = 'R';
+    char R = 'R';
 
-    currentPosition += sizeof(char);
+    writeToBuffer(&R, sizeof(char));
 
 }
 
 static void p_writePiece(Piece *p) {
 
-    mem_addr[currentPosition] = 'P';
+    char P = 'P';
 
-    currentPosition += sizeof(char);
+    writeToBuffer(&P, sizeof(char));
 
     int nameLength = strlen(p->name);
 
-    memcpy(mem_addr + currentPosition, &nameLength, sizeof(int));
+    writeToBuffer(&nameLength, sizeof(int));
 
-    currentPosition += sizeof(int);
-
-    memcpy(mem_addr + currentPosition, p->name, sizeof(char) * nameLength);
-
-    currentPosition += sizeof(char) * nameLength;
+    writeToBuffer(p->name, sizeof(char) * nameLength);
 
     int pieceSize = p->size;
 
-    memcpy(mem_addr + currentPosition, &pieceSize, sizeof(int));
-
-    currentPosition += sizeof(int);
+    writeToBuffer(&pieceSize, sizeof(int));
 
     int chars = PIECE_MATRIX_COLS * PIECE_MATRIX_ROWS;
 
-    memcpy(mem_addr + currentPosition, &chars, sizeof(int));
-
-    currentPosition += sizeof(int);
+    writeToBuffer(&chars, sizeof(int));
 
     writeMatrix(p->matrix);
 }
@@ -302,9 +302,7 @@ void writeMatrix(BitMatrix *matrix) {
 
             unsigned char value = (unsigned char) m_getBit(matrix, row, col);
 
-            memcpy(mem_addr + currentPosition, &value, sizeof(unsigned char));
-
-            currentPosition += sizeof(unsigned char);
+            writeToBuffer(&value, sizeof(unsigned char));
         }
     }
 
@@ -316,18 +314,14 @@ BitMatrix *readMatrix() {
 
     int chars;
 
-    memcpy(&chars, mem_addr + currentPosition, sizeof(int));
-
-    currentPosition += sizeof(int);
+    readFromBuffer(&chars, sizeof(int));
 
     for (int row = 0; row < matrix_rows(matrix); row++) {
         for (int col = 0; col < matrix_cols(matrix); col++) {
 
             char value;
 
-            memcpy(&value, mem_addr + currentPosition, sizeof(char));
-
-            currentPosition += sizeof(char);
+            readFromBuffer(&value, sizeof(char));
 
             m_setBit(matrix, row, col, value);
         }
@@ -342,9 +336,7 @@ void p_sendPossiblePieces(PossiblePieces *pieces) {
 
     int size = getPossiblePiecesCount(pieces);
 
-    memcpy(mem_addr + currentPosition, &size, sizeof(int));
-
-    currentPosition += sizeof(int);
+    writeToBuffer(&size, sizeof(int));
 
     struct Node_s *node = pieces->piecesList->first;
 
@@ -371,29 +363,21 @@ Piece *p_readPiece(Piece *prev) {
 
     char pieceType;
 
-    memcpy(&pieceType, mem_addr + currentPosition, sizeof(char));
-
-    currentPosition += sizeof(char);
+    readFromBuffer(&pieceType, sizeof(char));
 
     if (pieceType == 'P') {
 
         int nameLength;
 
-        memcpy(&nameLength, mem_addr + currentPosition, sizeof(int));
-
-        currentPosition += sizeof(int);
+        readFromBuffer(&nameLength, sizeof(int));
 
         char *name = malloc(sizeof(char) * nameLength);
 
-        memcpy(name, mem_addr + currentPosition, sizeof(char) * nameLength);
-
-        currentPosition += sizeof(char) * nameLength;
+        readFromBuffer(name, sizeof(char) * nameLength);
 
         int pieceSize;
 
-        memcpy(&pieceSize, mem_addr + currentPosition, sizeof(int));
-
-        currentPosition += sizeof(int);
+        readFromBuffer(&pieceSize, sizeof(int));
 
         Piece *piece = initPiece(pieceSize, name, readMatrix());
 
@@ -415,9 +399,7 @@ PossiblePieces *p_receivePossiblePieces(Game *game) {
 
     int pieceCount;
 
-    memcpy(&pieceCount, mem_addr + currentPosition, sizeof(int));
-
-    currentPosition += sizeof(int);
+    readFromBuffer(&pieceCount, sizeof(int));
 
     PossiblePieces *pieces = initPossiblePieces(game);
 
@@ -435,4 +417,158 @@ PossiblePieces *p_receivePossiblePieces(Game *game) {
     endReader();
 
     return pieces;
+}
+
+static int checkCurrentWriter() {
+
+    startWriterWithoutMark();
+
+    int current;
+
+    readFromBuffer(&current, sizeof(int));
+
+    endWriter();
+
+    return current;
+}
+
+void p_waitForOtherPlayerToChoosePieces() {
+
+    int result = checkCurrentWriter();
+
+    startWriter();
+
+    endWriter();
+
+    int other = isHost ? 0 : 1;
+
+    while (result != other || result == isHost) {
+
+        sleep(1);
+
+        result = checkCurrentWriter();
+
+        if (result == other) {
+            //Seems kind of weird, but this prevents the result from reading -1 after the other user
+            //has deleted the file (Notification that he has read and also is ready)
+            break;
+        }
+
+        printf("Reading player ready... %d (we are %d)\n", result, isHost);
+    }
+
+}
+
+void p_sendGameInfo(Game *game) {
+
+    startWriter();
+
+    writeToBuffer(&game->gameID, sizeof(int));
+
+    writeToBuffer(&game->currentPlayerIndex, sizeof(int));
+
+    endWriter();
+}
+
+void p_readGameInfo(Game *game) {
+
+    startReader();
+
+    readFromBuffer(&game->gameID, sizeof(int));
+
+    readFromBuffer(&game->currentPlayerIndex, sizeof(int));
+
+    endReader();
+}
+
+static Position* p_readPos() {
+
+    int x, y;
+
+    readFromBuffer(&x, sizeof(int));
+
+    readFromBuffer(&y, sizeof(int));
+
+    return initPos(x, y);
+
+}
+
+static void p_sendPos(Position *pos) {
+
+    writeToBuffer(&p_getBaseX(pos), sizeof(int));
+
+    writeToBuffer(&p_getBaseY(pos), sizeof(int));
+}
+
+void p_sendAttemptedPlay(Position *pos, int playerID, int gameID) {
+
+    p_sendPos(pos);
+
+    writeToBuffer(&playerID, sizeof(int));
+
+    writeToBuffer(&gameID, sizeof(int));
+}
+
+Played p_receiveAttemptedPlay(int gameID) {
+
+    Position *pos = p_readPos();
+
+    int playerID, otherGameID;
+
+    readFromBuffer(&playerID, sizeof(int));
+
+    readFromBuffer(&otherGameID, sizeof(int));
+
+    if (gameID != otherGameID) {
+        perror("FAILED TO READ, GAMEID IS NOT THE SAME\n");
+
+        exit(1);
+    }
+
+    Played p;
+
+    p.pos = pos;
+    p.playerID = playerID;
+    p.gameID = otherGameID;
+
+    return p;
+}
+
+void p_respondToAttemptedPlay(int playerID, HitType hit, int gameID) {
+
+    writeToBuffer(&playerID, sizeof(int));
+
+    writeToBuffer(&hit, sizeof(int));
+
+    writeToBuffer(&gameID, sizeof(int));
+
+}
+
+HitResult p_receivedAttemptedPlayResult(int gameID) {
+
+    HitResult result;
+
+    readFromBuffer(&result.playerID, sizeof(int));
+
+    readFromBuffer(&result.type, sizeof(int));
+
+    int otherGameID;
+
+    readFromBuffer(&otherGameID, sizeof(int));
+
+    if (otherGameID != gameID) {
+        perror("FAILED TO READ ATTEMPTED PLAY. GAMEID DOES NOT MATCH.\n");
+
+        exit(1);
+    }
+
+    return result;
+}
+
+void p_destroy() {
+    if (isHost) {
+        closeHost();
+    } else {
+        closeSlave();
+    }
 }

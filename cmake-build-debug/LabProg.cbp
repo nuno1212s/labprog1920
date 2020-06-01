@@ -84,6 +84,12 @@
 		<Unit filename="/home/nuno/CLionProjects/labprog1920/communication/communications.h">
 			<Option target="LabProg"/>
 		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/labprog1920/communication/pipes.c">
+			<Option target="LabProg"/>
+		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/labprog1920/communication/pipes.h">
+			<Option target="LabProg"/>
+		</Unit>
 		<Unit filename="/home/nuno/CLionProjects/labprog1920/communication/same_shell.c">
 			<Option target="LabProg"/>
 		</Unit>
