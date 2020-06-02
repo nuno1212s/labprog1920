@@ -54,4 +54,10 @@ void g_showYourTurn(Player*player);
 
 void g_showOtherTurn(Player *player);
 
+void g_otherPlayerDestroyedBoat(Player *,Position *pos);
+
+void g_otherPlayerHit(Player *, Position *pos);
+
+void g_otherPlayerMissed(Player *, Position *pos);
+
 #endif //LABPROG_GRAPHICS_H

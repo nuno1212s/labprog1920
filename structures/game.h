@@ -97,6 +97,8 @@ Player *initPlayer(char *name, int size, int isHost);
 
 Player *getCurrentPlayer(Game *);
 
+Player *getOtherPlayer(Game *);
+
 void goToNextPlayer(Game *);
 
 PieceInBoard *addPieceChosen(Player *, Position *, Piece *, PlacedDirection);

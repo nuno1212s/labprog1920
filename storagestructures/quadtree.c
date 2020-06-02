@@ -144,6 +144,12 @@ INSERT_RESULT insertNode(struct QuadNode_ *node, QuadPoint *pos) {
     switch (node->nodeKind) {
 
         case QT_LEAF: {
+
+//            printf("INSERTED INTO %d %d %d %d\n", p_getBaseX(node->bottomLeft),
+//                    p_getBaseY(node->bottomLeft),
+//                    p_getBaseX(node->bottomLeft) + node->dimension,
+//                    p_getBaseY(node->bottomLeft) + node->dimension);
+
             return insertIntoLeaf(node->leaf, pos);
         }
 
@@ -158,7 +164,7 @@ INSERT_RESULT insertIntoNode(struct Node_ *node, QuadPoint *pos) {
 
     INSERT_RESULT result = I_FAILED_NOT_INSIDE;
 
-    for (int i = 0; i <= node->stored; i++) {
+    for (int i = 0; i < node->stored; i++) {
 
         result = insertNode(node->children[i], pos);
 
@@ -168,6 +174,7 @@ INSERT_RESULT insertIntoNode(struct Node_ *node, QuadPoint *pos) {
 
             node->children[i] = divideLeafNode(node->children[i]);
 
+            //After dividing try again
             i--;
             continue;
         }
@@ -190,6 +197,8 @@ INSERT_RESULT insertIntoLeaf(struct LeafNode_ *node, QuadPoint *pos) {
 }
 
 void qt_insert(QuadTree *quad, Position *pos, void *value) {
+
+//    printf("INSERTING POINT %d %d\n", p_getBaseX(pos), p_getBaseY(pos));
 
     struct QuadNode_ *node = quad->rootNode;
 
@@ -381,9 +390,9 @@ int isContainedInside(Position *point, Position *bottomLeft, int dimension) {
     int base_X = p_getBaseX(bottomLeft), base_Y = p_getBaseY(bottomLeft),
             large_X = base_X + dimension, large_Y = base_Y + dimension;
 
+//    printf("Checking if %d, %d is in %d, %d -> %d %d\n", x, y, base_X, base_Y, large_X, large_Y);
 
-    return base_X <= x && x <= large_X && base_Y <= y && y <= large_Y;
-
+    return base_X <= x && x < large_X && base_Y <= y && y < large_Y;
 }
 
 void disposeOfNode(struct Node_ *);
@@ -530,7 +539,5 @@ void printFullNode(struct QuadNode_ *qn) {
 }
 
 void printQuad(QuadTree *qt) {
-
     printFullNode(qt->rootNode);
-
 }

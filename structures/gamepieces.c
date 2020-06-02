@@ -8,6 +8,12 @@
 static void clearPossiblePieces(Game *game) {
     PossiblePieces *gamePossiblePieces = game->p;
 
+    if (game->p->piecesList == NULL) {
+        free(game->p);
+
+        return;
+    }
+
     ll_forEach(gamePossiblePieces->piecesList, (void (*)(void *)) gs_freePiece);
 
     ll_free(gamePossiblePieces->piecesList);

@@ -34,7 +34,10 @@ void initShells(int argc, char *argv[]) {
     }
 
     if (split == HOST) {
-//        startGame(split);
+        startGame(split);
+
+        return;
+        sleep(1);
         pid_t pid = fork();
 
         char cwd[1024];

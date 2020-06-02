@@ -42,4 +42,10 @@ void sh_showYourTurn(Player *player);
 
 void sh_showOtherTurn(Player *player);
 
+void sh_otherPlayerDestroyedBoat(Player *player, Position *pos);
+
+void sh_otherPlayerHit(Player *player, Position *pos);
+
+void sh_otherPlayerMissed(Player *player, Position *pos);
+
 #endif //LABPROG_SHELL_H

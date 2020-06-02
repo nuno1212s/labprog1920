@@ -13,6 +13,8 @@
 
 #define MEM_SIZE 1024
 
+#define SKIP_CHAR 0b11000011
+
 static int isHost;
 
 static int currentPosition = 0;
@@ -90,8 +92,15 @@ static void initSlave() {
 
 static int checkWriter() {
 
-    if (mem_addr[currentPosition] == isHost) {
-        perror("The writer is the same as the reader");
+    if (mem_addr[currentPosition] == 0) {
+        fprintf(stderr, "Current read pos: %d\n", currentPosition);
+        perror("Nothing to read....\n");
+
+        return 0;
+    }
+
+    if (mem_addr[currentPosition] == (isHost + 1)) {
+        perror("The writer is the same as the reader\n");
 
         return 0;
     }
@@ -102,7 +111,9 @@ static int checkWriter() {
 }
 
 static void markWriter() {
-    mem_addr[currentPosition] = (char) isHost;
+    mem_addr[currentPosition] = (char) (isHost + 1);
+
+    printf("Marked writer as %d in pos %d\n", isHost + 1, currentPosition);
 
     currentPosition += sizeof(char);
 }
@@ -147,22 +158,16 @@ static void finishSemLock() {
 }
 
 static void startWriter() {
-    currentPosition = 0;
-
     attemptSemLock();
 
     markWriter();
 }
 
 static void startWriterWithoutMark() {
-    currentPosition = 0;
-
     attemptSemLock();
 }
 
 static void startReader() {
-    currentPosition = 0;
-
     attemptSemLock();
 
     if (!checkWriter()) {
@@ -177,26 +182,53 @@ static void startReader() {
 
 static void endReader() {
     finishSemLock();
-
-    for (int i = 0; i < MEM_SIZE; i++) {
-        //Clear the memory
-        mem_addr[i] = 0;
-    }
 }
 
 static void endWriter() {
     finishSemLock();
 }
 
+
+static void prepareForWrite(size_t size) {
+
+    if (currentPosition + size >= MEM_SIZE) {
+        mem_addr[currentPosition] = SKIP_CHAR;
+
+        currentPosition = 0;
+    }
+
+    printf("CURRENT POS: %d\n", currentPosition);
+
+}
+
+
+static void prepareForRead() {
+
+    if (((unsigned char) mem_addr[currentPosition]) == SKIP_CHAR) {
+        currentPosition = 0;
+
+        printf("CURRENT POS: %d\n", currentPosition);
+    }
+
+}
+
 static void writeToBuffer(void *toWrite, size_t size) {
+
+    prepareForWrite(size);
 
     memcpy(mem_addr + currentPosition, toWrite, size);
 
     currentPosition += size;
 
+    //Set the next byte to 0, to mark that the message ends there
+    for (int i = 0; i < sizeof(long) && currentPosition + i < MEM_SIZE; i++) {
+        mem_addr[currentPosition + i] = 0;
+    }
 }
 
 static void readFromBuffer(void *toRead, size_t size) {
+
+    prepareForRead();
 
     memcpy(toRead, mem_addr + currentPosition, size);
 
@@ -234,16 +266,20 @@ void p_readPlayerInformation(int id, Player *p) {
     readFromBuffer(&playerID, sizeof(int));
 
     if (playerID != id) {
-        perror("FAILED TO READ PLAYER. (SAME ID)");
+        fprintf(stderr, "FAILED TO READ PLAYER. (DIFFERENT ID %d, %d)", playerID, id);
 
         endReader();
 
-        return;
+        exit(1);
     }
 
-    char *name = malloc(sizeof(char) * MAX_PLAYER_NAME_SIZE);
+    int playerNameLength;
 
-    readFromBuffer(name, sizeof(char) * MAX_PLAYER_NAME_SIZE);
+    readFromBuffer(&playerNameLength, sizeof(int));
+
+    char *name = calloc(playerNameLength, sizeof(char));
+
+    readFromBuffer(name, sizeof(char) * playerNameLength);
 
     p->name = name;
 
@@ -256,7 +292,11 @@ void p_sendPlayerInformation(int id, Player *p) {
 
     writeToBuffer(&id, sizeof(int));
 
-    writeToBuffer(p->name, sizeof(char) * MAX_PLAYER_NAME_SIZE);
+    int playerNameLen = strlen(p->name) + 1;
+
+    writeToBuffer(&playerNameLen, sizeof(int));
+
+    writeToBuffer(p->name, sizeof(char) * playerNameLen);
 
     endWriter();
 }
@@ -277,7 +317,7 @@ static void p_writePiece(Piece *p) {
 
     writeToBuffer(&P, sizeof(char));
 
-    int nameLength = strlen(p->name);
+    int nameLength = strlen(p->name) + 1;
 
     writeToBuffer(&nameLength, sizeof(int));
 
@@ -386,7 +426,7 @@ Piece *p_readPiece(Piece *prev) {
     } else if (pieceType == 'R') {
         return prev;
     } else {
-        printf("FAILED TO READ %c\n", pieceType);
+        printf("FAILED TO READ %c .\n", pieceType);
 
         exit(1);
     }
@@ -419,13 +459,13 @@ PossiblePieces *p_receivePossiblePieces(Game *game) {
     return pieces;
 }
 
-static int checkCurrentWriter() {
+static char checkCurrentWriter() {
 
     startWriterWithoutMark();
 
-    int current;
+    char current;
 
-    readFromBuffer(&current, sizeof(int));
+    readFromBuffer(&current, sizeof(char));
 
     endWriter();
 
@@ -434,28 +474,31 @@ static int checkCurrentWriter() {
 
 void p_waitForOtherPlayerToChoosePieces() {
 
-    int result = checkCurrentWriter();
+    char result = checkCurrentWriter();
+
+    startWriter();
+
+    //Write the current player tag and regress to keep reading that same position for changes
+    currentPosition -= sizeof(char);
+    endWriter();
+
+    int other = (isHost == 1) ? 1 : 2;
+
+    while (result != other) {
+
+        sleep(1);
+
+        result = checkCurrentWriter();
+        currentPosition -= sizeof(char);
+
+        printf("Reading player ready... %d (we are %d)\n", result, isHost + 1);
+    }
 
     startWriter();
 
     endWriter();
 
-    int other = isHost ? 0 : 1;
-
-    while (result != other || result == isHost) {
-
-        sleep(1);
-
-        result = checkCurrentWriter();
-
-        if (result == other) {
-            //Seems kind of weird, but this prevents the result from reading -1 after the other user
-            //has deleted the file (Notification that he has read and also is ready)
-            break;
-        }
-
-        printf("Reading player ready... %d (we are %d)\n", result, isHost);
-    }
+    printf("READ PLAYER READY %d\n", result);
 
 }
 
@@ -471,7 +514,6 @@ void p_sendGameInfo(Game *game) {
 }
 
 void p_readGameInfo(Game *game) {
-
     startReader();
 
     readFromBuffer(&game->gameID, sizeof(int));
@@ -481,7 +523,7 @@ void p_readGameInfo(Game *game) {
     endReader();
 }
 
-static Position* p_readPos() {
+static Position *p_readPos() {
 
     int x, y;
 
@@ -502,14 +544,20 @@ static void p_sendPos(Position *pos) {
 
 void p_sendAttemptedPlay(Position *pos, int playerID, int gameID) {
 
+    startWriter();
+
     p_sendPos(pos);
 
     writeToBuffer(&playerID, sizeof(int));
 
     writeToBuffer(&gameID, sizeof(int));
+
+    endWriter();
 }
 
 Played p_receiveAttemptedPlay(int gameID) {
+
+    startReader();
 
     Position *pos = p_readPos();
 
@@ -531,10 +579,14 @@ Played p_receiveAttemptedPlay(int gameID) {
     p.playerID = playerID;
     p.gameID = otherGameID;
 
+    endReader();
+
     return p;
 }
 
 void p_respondToAttemptedPlay(int playerID, HitType hit, int gameID) {
+
+    startWriter();
 
     writeToBuffer(&playerID, sizeof(int));
 
@@ -542,9 +594,13 @@ void p_respondToAttemptedPlay(int playerID, HitType hit, int gameID) {
 
     writeToBuffer(&gameID, sizeof(int));
 
+    endWriter();
+
 }
 
 HitResult p_receivedAttemptedPlayResult(int gameID) {
+
+    startReader();
 
     HitResult result;
 
@@ -561,6 +617,8 @@ HitResult p_receivedAttemptedPlayResult(int gameID) {
 
         exit(1);
     }
+
+    endReader();
 
     return result;
 }

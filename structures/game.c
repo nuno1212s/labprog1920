@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <time.h>
 #include "../storagestructures/bitmap.h"
 #include "gamestructures.h"
 
@@ -20,6 +21,8 @@ Game *initGame(int players, int size, Player **player) {
     game->players = player;
 
     game->currentPlayerIndex = rand() % players;
+
+    game->p = NULL;
 
     return game;
 }
@@ -99,6 +102,14 @@ Player *getCurrentPlayer(Game *game) {
     Player *p = game->players[game->currentPlayerIndex];
 
     return p;
+}
+
+Player *getOtherPlayer(Game *game) {
+    if (game->currentPlayerIndex == 1) {
+        return game->players[0];
+    } else if (game->currentPlayerIndex == 0) {
+        return game->players[1];
+    }
 }
 
 void goToNextPlayer(Game *game) {
@@ -267,6 +278,8 @@ SearchingForGame *initGameForPlayer(Player *player, int size) {
 
 void randomizePiecesLeft(Player *player, int size, PieceInBoard **placed, PossiblePieces *pieces) {
 
+    srand(time(0));
+
     LinkedList *list = pieces->piecesList;
 
     struct Node_s *first = list->first;
@@ -288,10 +301,14 @@ void randomizePiecesLeft(Player *player, int size, PieceInBoard **placed, Possib
 
         Position *pos = initPos(x, y);
 
+        printf("Attempting to place piece %s in %d %d \n",piece->name, p_getBaseX(pos), p_getBaseY(pos));
+
         PieceInBoard *placedPiece = NULL;
 
         if ((placedPiece = addPieceChosen(player, pos, piece, dir)) == NULL) {
             //Retry a different position
+
+            printf("failed\n");
 
             p_free(pos);
 

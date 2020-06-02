@@ -36,7 +36,7 @@ char *sh_readPlayerName() {
 
     printf("Insert your name here: (Max of %d characters and no spaces)\n", MAX_PLAYER_NAME_SIZE);
 
-    scanf("%24s", playerNameBuffer);
+    scanf("%23s", playerNameBuffer);
 
     return playerNameBuffer;
 }
@@ -92,7 +92,7 @@ void showPlayerTray(Player *player) {
 
     GameStorage *storage = player->storage;
 
-    int size = player->storage->size;
+    int size = storage->size;
 
     printf("     ");
 
@@ -140,7 +140,7 @@ void showPlayerTray(Player *player) {
 
                 if (ps->ownHitPoint != NULL) {
                     if (ps->ownHitPoint->hit) {
-                        toPrint[1] = '*';
+                        toPrint[1] = '~';
                     } else {
                         toPrint[1] = '+';
                     }
@@ -161,7 +161,7 @@ void showPlayerTray(Player *player) {
         printf("|\n");
     }
 
-    printf("# - Your boat, * - Opponent Hit, = - Opponent Miss, # - My Hit, + - My miss\n");
+    printf("# - Your boat, * - Opponent Hit, = - Opponent Miss, ~ - My Hit, + - My miss\n");
 }
 
 void sh_showPlaceablePieces(Player *game, PossiblePieces *piece, PieceInBoard **placed) {
@@ -279,4 +279,28 @@ void sh_showOtherTurn(Player *player) {
     printf("It's %s's turn to play.\n", player->name);
 
     printf("Wait for his move.\n");
+}
+
+void sh_otherPlayerDestroyedBoat(Player *player, Position *pos) {
+    showPlayerTray(player);
+
+    printf("The other player played in the position %d %d and destroyed one of your boats!\n",
+            p_getBaseX(pos), p_getBaseY(pos));
+}
+
+void sh_otherPlayerHit(Player *player, Position *pos) {
+
+    showPlayerTray(player);
+
+    printf("The other player played in the position %d %d and hit one of your boats!\n",
+           p_getBaseX(pos), p_getBaseY(pos));
+
+}
+
+void sh_otherPlayerMissed(Player *player, Position *pos) {
+
+    showPlayerTray(player);
+
+    printf("The other player played in the position %d %d and missed!\n",
+           p_getBaseX(pos), p_getBaseY(pos));
 }

@@ -147,7 +147,7 @@ void placePieces(Game *game, Player *player) {
 
     int pieceCount = getPossiblePiecesCount(game->p);
 
-    PieceInBoard ** hasBeenPlaced = calloc(pieceCount, sizeof(PieceInBoard*));
+    PieceInBoard **hasBeenPlaced = calloc(pieceCount, sizeof(PieceInBoard *));
 
     while (1) {
 
@@ -255,6 +255,7 @@ int myTurn(Game *game) {
 void otherPlayerTurn(Game *game) {
     Player *current = getCurrentPlayer(game);
 
+
     g_showOtherTurn(current);
 
     Played played = c_receiveAttemptedPlay(game->gameID);
@@ -265,7 +266,22 @@ void otherPlayerTurn(Game *game) {
         exit(1);
     }
 
+    Player *player = getOtherPlayer(game);
     Hit result = playAt(game, current, played.pos);
+
+    switch (result.hitType) {
+        case H_HIT_BOAT:
+            g_otherPlayerHit(player, played.pos);
+            break;
+        case H_MISSED:
+            g_otherPlayerMissed(player, played.pos);
+            break;
+        case H_DESTROYED_BOAT:
+            g_otherPlayerDestroyedBoat(player, played.pos);
+            break;
+        default :
+            break;
+    }
 
     c_respondToAttemptedPlay(played.playerID, result.hitType, game->gameID);
 

@@ -177,3 +177,32 @@ void g_showOtherTurn(Player *player) {
             break;
     }
 }
+
+void g_otherPlayerDestroyedBoat(Player *player, Position *pos) {
+
+    switch (graphicsType) {
+        case SHELL:
+            sh_otherPlayerDestroyedBoat(player, pos);
+            break;
+    }
+
+}
+
+void g_otherPlayerHit(Player *player, Position *pos) {
+
+    switch (graphicsType) {
+        case SHELL:
+            sh_otherPlayerHit(player, pos);
+            break;
+    }
+
+}
+
+void g_otherPlayerMissed(Player *player, Position *pos) {
+
+    switch (graphicsType) {
+        case SHELL:
+            sh_otherPlayerMissed(player, pos);
+            break;
+    }
+}
