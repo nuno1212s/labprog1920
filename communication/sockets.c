@@ -108,6 +108,8 @@ void s_init(int host) {
         initSlave();
     }
 
+    //Make the sockets block on read when there is no information to read
+    //Instead of just reading 0
     ioctl(openSocket_fd, FIONBIO, 0);
 }
 
