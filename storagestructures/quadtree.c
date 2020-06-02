@@ -42,7 +42,9 @@ QuadTree *initQuadTree(int dimensions) {
     //Use powers of 2 to make it divisible all the way to 0
     int closestNextPowerOf2 = (int) pow(2, (int) sqrt(dimensions) + 1);
 
-    quadTree->rootNode = initLeaf(initPos(0, 0), closestNextPowerOf2);
+    Position bottomLeft = {0, 0};
+
+    quadTree->rootNode = initLeaf(&bottomLeft, closestNextPowerOf2);
 
     return quadTree;
 }
@@ -204,11 +206,17 @@ void qt_insert(QuadTree *quad, Position *pos, void *value) {
 
     QuadPoint *point = qt_lookup(quad, pos);
 
+    printf("Inserting point %p\n", point);
+
     if (point == NULL) {
         point = initQuadPoint(pos, value);
     } else {
         point->value = value;
+        //Point was already there, just had the refresh the value of it
+        return;
     }
+
+    printf("After %p\n", point);
 
     INSERT_RESULT result = insertNode(node, point);
 
@@ -376,6 +384,9 @@ struct QuadNode_ *divideLeafNode(struct QuadNode_ *node) {
 
         insertNode(newNode, node->leaf->positions[i]);
 
+        node->leaf->positions[i] = NULL;
+        node->leaf->stored--;
+        //We don't want the nodes getting freed afterwards
     }
 
     freeQuadNode(node);
@@ -437,6 +448,10 @@ void disposeOfNode(struct Node_ *node) {
 
 void disposeOfLeafNode(struct LeafNode_ *leaf) {
 
+    for (int i = 0; i < leaf->stored; i++) {
+        freeQuadPoint(leaf->positions[i]);
+    }
+
     free(leaf->positions);
 
     free(leaf);
@@ -457,10 +472,10 @@ void iterateAllPointsQtNode(struct Node_ *node, void (*toCall)(void *)) {
 
 void iterateAllPointQtLeaf(struct LeafNode_ *leaf, void (*toCall)(void *)) {
 
+//    printf("Stored: %d\n", leaf->stored);
+
     for (int i = 0; i < leaf->stored; i++) {
-
-        toCall(leaf->positions[i]);
-
+        toCall(leaf->positions[i]->value);
     }
 }
 
@@ -493,6 +508,8 @@ void freeQuad(QuadTree *qt) {
 }
 
 void freeQuadPoint(QuadPoint *qp) {
+
+//    printf("Freeing point %p\n", qp);
 
     p_free(qp->pos);
 

@@ -62,4 +62,6 @@ PossiblePieces *getPossiblePieces(struct Game_ * );
  */
 void addPossiblePiece(struct Game_ * , Piece *piece);
 
+void freePossiblePieces(struct Game_ *);
+
 #endif //LABPROG_GAMEPIECES_H

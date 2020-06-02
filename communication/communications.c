@@ -1,6 +1,6 @@
 #include "communications.h"
 
-#define PIPES
+#define TEXT
 
 #ifdef TEXT
 

@@ -19,11 +19,7 @@ struct PointStorage_ {
 };
 
 struct HitPoint_ {
-
-    Position *pos;
-
     int hit;
-
 };
 
 struct GameStorage_ {
@@ -43,7 +39,6 @@ struct HitResponse_ {
         HR_ALREADY_HIT
     } hit_type;
 
-    //TODO: Piece
     PieceInBoard *hit;
 
 };
@@ -59,11 +54,9 @@ typedef struct HitResponse_ HitResponse;
 /**
  * Hit points
  */
-HitPoint *initHitPoint(Position *, int);
+HitPoint *initHitPoint(int);
 
 int gs_hasHit(HitPoint *);
-
-Position *gs_getPos(HitPoint *);
 
 void gs_freeHP(HitPoint *);
 

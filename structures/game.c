@@ -37,6 +37,8 @@ void freeGame(Game *game) {
 
     }
 
+    freePossiblePieces(game);
+
     free(game->players);
 
     free(game);
@@ -93,6 +95,10 @@ static Hit alreadyHit() {
     return h;
 }
 
+Player *getPlayer(Game *game, int index) {
+    return game->players[index];
+}
+
 Player *getCurrentPlayer(Game *game) {
 
     if (game->currentPlayerIndex >= game->playerCount) {
@@ -119,7 +125,7 @@ void goToNextPlayer(Game *game) {
 
 int hasPlayedAt(Player *player, Position *pos) {
 
-    return hasPlayed(player->storage, pos);
+    return hasPlayed(pl_storage(player), pos);
 
 }
 
@@ -135,7 +141,7 @@ Hit playAt(Game *g, Player *player, Position *pos) {
 
         Player *p = g->players[i];
 
-        res = attemptHit(p->storage, pos);
+        res = attemptHit(pl_storage(p), pos);
 
         otherPlayer = p;
     }
@@ -146,8 +152,8 @@ Hit playAt(Game *g, Player *player, Position *pos) {
     }
 
     if (res.hit_type == HR_HIT_BOAT) {
-        if (hasBeenDestroyed(otherPlayer->storage, res.hit)) {
-            otherPlayer->currentActivePieceCount--;
+        if (hasBeenDestroyed(pl_storage(otherPlayer), res.hit)) {
+            pl_setActivePieces(otherPlayer, pl_activePieces(otherPlayer) - 1);
             return destroyed();
         }
 
@@ -174,7 +180,7 @@ void registerPlayResult(Game *game, Player *player, Position *position, HitType 
             otherPlayer = game->players[i];
         }
 
-        otherPlayer->currentActivePieceCount--;
+        pl_setActivePieces(otherPlayer, pl_activePieces(otherPlayer) - 1);
     }
 
     switch (type) {
@@ -189,7 +195,7 @@ void registerPlayResult(Game *game, Player *player, Position *position, HitType 
             break;
     }
 
-    registerHit(player->storage, position, result);
+    registerHit(pl_storage(player), position, result);
 
 }
 
@@ -201,7 +207,7 @@ int hasFinished(Game *g) {
 
         Player *p = g->players[i];
 
-        if (p->currentActivePieceCount == 0) {
+        if (pl_activePieces(p) == 0) {
             //If the player has no active pieces, then the other player has won
 
             playerThatLost = i;
@@ -241,13 +247,13 @@ Player *initPlayer(char *name, int size, int isHost) {
 
 PieceInBoard *addPieceChosen(Player *player, Position *position, Piece *piece, PlacedDirection dir) {
 
-    GameStorage *storage = player->storage;
+    GameStorage *storage = pl_storage(player);
 
     if (canPlacePiece(player, position, piece, dir)) {
 
         PieceInBoard *board = insertPiece(storage, piece, position, dir);
 
-        player->currentActivePieceCount++;
+        pl_setActivePieces(player, pl_activePieces(player) + 1);
 
         return board;
     } else {
@@ -258,7 +264,7 @@ PieceInBoard *addPieceChosen(Player *player, Position *position, Piece *piece, P
 
 int canPlacePiece(Player *player, Position *pos, Piece *piece, PlacedDirection dir) {
 
-    GameStorage *storage = player->storage;
+    GameStorage *storage = pl_storage(player);
 
     return gs_canPlayPiece(storage, piece, pos, dir);
 }
@@ -301,7 +307,7 @@ void randomizePiecesLeft(Player *player, int size, PieceInBoard **placed, Possib
 
         Position *pos = initPos(x, y);
 
-        printf("Attempting to place piece %s in %d %d \n",piece->name, p_getBaseX(pos), p_getBaseY(pos));
+        printf("Attempting to place piece %s in %d %d \n", piece->name, p_getBaseX(pos), p_getBaseY(pos));
 
         PieceInBoard *placedPiece = NULL;
 
@@ -318,6 +324,8 @@ void randomizePiecesLeft(Player *player, int size, PieceInBoard **placed, Possib
         if (placed != NULL) {
             placed[current] = placedPiece;
         }
+
+        p_free(pos);
 
         current++;
         first = first->next;
@@ -336,7 +344,8 @@ SearchingForGame *randomizePieces(Player *player, int size) {
 
 void freePlayer(Player *player) {
 
-    freeGameStorage(player->storage);
+    if (pl_storage(player) != NULL)
+        freeGameStorage(pl_storage(player));
 
     free(player->name);
 

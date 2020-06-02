@@ -93,6 +93,10 @@ Position *addToWithDirection(Position *pos, Position *pos2, PlacedDirection plac
     return pos;
 }
 
+void printPos(Position *p) {
+    printf("P: %d %d\n", p_getBaseX(p), p_getBaseY(p));
+}
+
 void p_free(Position *p) {
     free(p);
 }

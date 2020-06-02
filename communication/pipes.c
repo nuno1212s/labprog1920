@@ -281,7 +281,7 @@ void p_readPlayerInformation(int id, Player *p) {
 
     readFromBuffer(name, sizeof(char) * playerNameLength);
 
-    p->name = name;
+    pl_setname(p, name);
 
     endReader();
 }
@@ -292,11 +292,11 @@ void p_sendPlayerInformation(int id, Player *p) {
 
     writeToBuffer(&id, sizeof(int));
 
-    int playerNameLen = strlen(p->name) + 1;
+    int playerNameLen = strlen(pl_name(p)) + 1;
 
     writeToBuffer(&playerNameLen, sizeof(int));
 
-    writeToBuffer(p->name, sizeof(char) * playerNameLen);
+    writeToBuffer(pl_name(p), sizeof(char) * playerNameLen);
 
     endWriter();
 }
@@ -420,6 +420,8 @@ Piece *p_readPiece(Piece *prev) {
         readFromBuffer(&pieceSize, sizeof(int));
 
         Piece *piece = initPiece(pieceSize, name, readMatrix());
+
+        free(name);
 
         return piece;
 

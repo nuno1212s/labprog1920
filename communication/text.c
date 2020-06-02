@@ -239,13 +239,13 @@ void txt_block() {
     isBlocking = 1;
 }
 
-static char * readFromFP() {
+static char *readFromFP() {
 
-    char * result;
+    char *result;
 
     if ((result = fgets(BUFFER, BUFFER_SIZE, fp)) == 0) return NULL;
 
-    for (int i = 0; ; i++) {
+    for (int i = 0;; i++) {
 
         if (result[i] == '\n') {
             result[i] = '\0';
@@ -327,9 +327,8 @@ void txt_writePlayerInfo(int id, char *name) {
 }
 
 void txt_sendPlayerInformation(int id, Player *player) {
-    txt_writePlayerInfo(id, player->name);
+    txt_writePlayerInfo(id, pl_name(player));
 }
-
 
 void txt_readPlayerInformation(int id, Player *player) {
 
@@ -360,7 +359,7 @@ void txt_readPlayerInformation(int id, Player *player) {
         return;
     }
 
-    player->name = strdup(name);
+    pl_setname(player, strdup(name));
 
     closeFP();
 }

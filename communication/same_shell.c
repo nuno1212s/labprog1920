@@ -21,7 +21,9 @@ void ssh_writeGameSize(int size) {
 }
 
 void ssh_readPlayerInformation(Player * player) {
-    player->name = g_readPlayerName();
+    char *pName = g_readPlayerName();
+
+    pl_setname(player, pName);
 
     player->storage = initGameStorage(currentGameSize);
 }
@@ -45,7 +47,7 @@ void ssh_waitForOtherPlayerToChoosePieces() {
     Player *notChosenYet = NULL;
 
     for (int i = 0; i < game->playerCount; i++) {
-        if (game->players[i]->currentActivePieceCount == 0) {
+        if (pl_activePieces(game->players[i]) == 0) {
             notChosenYet = game->players[i];
             break;
         }
@@ -64,7 +66,7 @@ void ssh_waitForOtherPlayerToChoosePieces() {
         int pieceID = g_requestPieceToPlay(pieceCount);
 
         if (pieceID == -1) {
-            if (notChosenYet->currentActivePieceCount < getPossiblePiecesCount(game->p)) {
+            if (pl_activePieces(notChosenYet) < getPossiblePiecesCount(game->p)) {
 
                 randomizePiecesLeft(notChosenYet, game->size, (PieceInBoard **) hasBeenPlaced, game->p);
 
@@ -150,15 +152,15 @@ void ssh_respondToAttemptedPlay(int playerID, HitType hit, int gameID) {
 
         case H_ALREADY_HIT:
             g_alreadyPlayedThere();
-            printf("ALREADY HIT Current player Before %s\n" , getCurrentPlayer(game)->name);
+            printf("ALREADY HIT Current player Before %s\n" , pl_name(getCurrentPlayer(game)));
             break;
         case H_DESTROYED_BOAT:
             g_destroyedBoat();
-            printf("DESTROYED BOAT Current player Before %s\n" , getCurrentPlayer(game)->name);
+            printf("DESTROYED BOAT Current player Before %s\n" , pl_name(getCurrentPlayer(game)));
             break;
         case H_HIT_BOAT:
             g_hitBoat();
-            printf("HIT_BOAT Current player Before %s\n" , getCurrentPlayer(game)->name);
+            printf("HIT_BOAT Current player Before %s\n" , pl_name(getCurrentPlayer(game)));
             break;
         case H_MISSED:
 

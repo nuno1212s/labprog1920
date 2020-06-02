@@ -9,6 +9,13 @@
 #define g_gameID(g) (g->gameID)
 #define g_gameSize(g) (g->size)
 #define g_currentPlayer(g) (g->currentPlayerIndex)
+#define g_possiblePieces(g) (g->p)
+
+#define pl_name(p) (p->name)
+#define pl_setname(p, newName) (p->name = newName)
+#define pl_storage(p) (p->storage)
+#define pl_activePieces(p) (p->currentActivePieceCount)
+#define pl_setActivePieces(p, pieces) (p->currentActivePieceCount = pieces)
 
 #define MIN_GAME_SIZE 20
 #define MAX_GAME_SIZE 40
@@ -94,6 +101,8 @@ void freeGame(Game *);
  * @return
  */
 Player *initPlayer(char *name, int size, int isHost);
+
+Player *getPlayer(Game *, int);
 
 Player *getCurrentPlayer(Game *);
 

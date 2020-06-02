@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "gamepieces.h"
+#include "pieces.h"
 #include "game.h"
 
 static void clearPossiblePieces(Game *game) {
@@ -35,7 +36,7 @@ PossiblePieces *initPossiblePieces(Game *g) {
         clearPossiblePieces(g);
     }
 
-    PossiblePieces * gamePossiblePieces = malloc(sizeof(PossiblePieces));
+    PossiblePieces *gamePossiblePieces = malloc(sizeof(PossiblePieces));
 
     gamePossiblePieces->piecesList = ll_initList();
 
@@ -159,4 +160,16 @@ int getPossiblePiecesCount(PossiblePieces *game) {
 
 void addPossiblePiece(Game *game, Piece *piece) {
     ll_addLast(piece, getPossiblePieces(game)->piecesList);
+}
+
+void freePossiblePieces(Game *game) {
+
+    PossiblePieces *pieces = g_possiblePieces(game);
+
+    ll_forEach(pieces->piecesList, (void (*)(void *)) gs_freePiece);
+
+    ll_free(pieces->piecesList);
+
+    free(pieces);
+
 }

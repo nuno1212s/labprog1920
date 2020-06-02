@@ -1,5 +1,6 @@
 #include "pieces.h"
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 PieceInBoard *initPieceInBoard(Piece *piece, Position *pos, PlacedDirection dir) {
@@ -8,7 +9,7 @@ PieceInBoard *initPieceInBoard(Piece *piece, Position *pos, PlacedDirection dir)
 
     board->piece = piece;
     board->direction = dir;
-    board->basePos = pos;
+    board->basePos = clonePos(pos);
     board->destroyed = 0;
 
     return board;
@@ -62,6 +63,8 @@ char *getName(Piece *piece) {
 }
 
 void gs_freePiece(Piece *piece) {
+
+    printf("Freeing piece %s\n", piece->name);
 
     free(piece->name);
 

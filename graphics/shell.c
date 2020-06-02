@@ -90,7 +90,7 @@ void sh_destroyedBoat() {
 
 void showPlayerTray(Player *player) {
 
-    GameStorage *storage = player->storage;
+    GameStorage *storage = pl_storage(player);
 
     int size = storage->size;
 
@@ -101,12 +101,12 @@ void showPlayerTray(Player *player) {
 
         printf("%d ", i);
 
-        if (size < 10) printf("  ");
+        if (size < 10) printf("   ");
     }
 
     printf("\n");
 
-    for (int row = size; row >= 0; row--) {
+    for (int row = size - 1; row >= 0; row--) {
 
         for (int i = 0; i < size; i++) {
             printf("----");
@@ -135,7 +135,11 @@ void showPlayerTray(Player *player) {
                 PointStorage *ps = (PointStorage *) result;
 
                 if (ps->piece != NULL) {
-                    toPrint[0] = '#';
+                    if (ps->piece->destroyed == ps->piece->piece->size) {
+                        toPrint[0] = '/';
+                    } else {
+                        toPrint[0] = '#';
+                    }
                 }
 
                 if (ps->ownHitPoint != NULL) {
@@ -161,14 +165,14 @@ void showPlayerTray(Player *player) {
         printf("|\n");
     }
 
-    printf("# - Your boat, * - Opponent Hit, = - Opponent Miss, ~ - My Hit, + - My miss\n");
+    printf("# - Your boat, / - My destroyed boat, * - Opponent Hit, = - Opponent Miss, ~ - My Hit, + - My miss\n");
 }
 
 void sh_showPlaceablePieces(Player *game, PossiblePieces *piece, PieceInBoard **placed) {
 
     //system("clear");
 
-    printf("Insert your pieces in the desired position %s\n", game->name);
+    printf("Insert your pieces in the desired position %s\n", pl_name(game));
 
     showPlayerTray(game);
 
@@ -271,12 +275,12 @@ PlacedDirection sh_readPlaceDirection() {
 void sh_showYourTurn(Player *player) {
     showPlayerTray(player);
 
-    printf("It's your turn to play, %s\n", player->name);
+    printf("It's your turn to play, %s\n", pl_name(player));
     printf("Choose where you want to play!\n");
 }
 
 void sh_showOtherTurn(Player *player) {
-    printf("It's %s's turn to play.\n", player->name);
+    printf("It's %s's turn to play.\n", pl_name(player));
 
     printf("Wait for his move.\n");
 }

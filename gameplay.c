@@ -58,7 +58,7 @@ void startGame(int host) {
 
         c_readPlayerInformation(1, player1);
 
-        g_displayOpponentName(player1->name);
+        g_displayOpponentName(pl_name(player1));
     } else {
 
         playerID = 1;
@@ -79,7 +79,7 @@ void startGame(int host) {
 
         c_sendPlayerInformation(1, player1);
 
-        g_displayOpponentName(player0->name);
+        g_displayOpponentName(pl_name(player0));
     }
 
     free(playerName);
@@ -99,7 +99,7 @@ void startGame(int host) {
         c_readGameInfo(game);
     }
 
-    printf("The gameID is: %d, Current player is: %s\n", game->gameID, getCurrentPlayer(game)->name);
+    printf("The gameID is: %d, Current player is: %s\n", game->gameID, pl_name(getCurrentPlayer(game)));
 
     sleep(2);
 
@@ -108,11 +108,11 @@ void startGame(int host) {
     if (host) {
         placePieces(game, player0);
 
-        player1->currentActivePieceCount = ll_size(pieces->piecesList);
+        pl_setActivePieces(player1, ll_size(pieces->piecesList));
     } else {
         placePieces(game, player1);
 
-        player0->currentActivePieceCount = ll_size(pieces->piecesList);
+        pl_setActivePieces(player0, ll_size(pieces->piecesList));
     }
 
     runGame(game);
@@ -156,7 +156,7 @@ void placePieces(Game *game, Player *player) {
         int pieceID = g_requestPieceToPlay(pieceCount);
 
         if (pieceID == -1) {
-            if (player->currentActivePieceCount < getPossiblePiecesCount(game->p)) {
+            if (pl_activePieces(player) < getPossiblePiecesCount(game->p)) {
 
                 randomizePiecesLeft(player, game->size, (PieceInBoard **) hasBeenPlaced, game->p);
 
@@ -185,6 +185,8 @@ void placePieces(Game *game, Player *player) {
         p_free(pos);
     }
 
+    free(hasBeenPlaced);
+
     g_waitingForOpponent();
 
     c_waitForOtherPlayerToChoosePieces();
@@ -201,6 +203,17 @@ int myTurn(Game *game) {
     g_showYourTurn(playerData);
 
     Position *toPlayAt = g_readPosition();
+
+    int x = p_getBaseX(toPlayAt), y = p_getBaseY(toPlayAt);
+
+    while (x < 0 || x >= g_gameSize(game) || y < 0 || y >= g_gameSize(game)) {
+        p_free(toPlayAt);
+
+        toPlayAt = g_readPosition();
+
+        x = p_getBaseX(toPlayAt);
+        y = p_getBaseY(toPlayAt);
+    }
 
     if (hasPlayedAt(playerData, toPlayAt)) {
 
@@ -255,7 +268,6 @@ int myTurn(Game *game) {
 void otherPlayerTurn(Game *game) {
     Player *current = getCurrentPlayer(game);
 
-
     g_showOtherTurn(current);
 
     Played played = c_receiveAttemptedPlay(game->gameID);
@@ -293,7 +305,9 @@ void runGame(Game *game) {
 
     printf("Starting game...\n");
 
-    while (hasFinished(game) == -1) {
+    int winner = 0;
+
+    while ((winner = hasFinished(game)) == -1) {
 
         printf("Current player: %d, PlayerID: %d\n", game->currentPlayerIndex, playerID);
 
@@ -306,5 +320,7 @@ void runGame(Game *game) {
         }
 
     }
+
+    printf("THE WINNER OF THE GAME IS %s\n", pl_name(getPlayer(game, winner)));
 
 }

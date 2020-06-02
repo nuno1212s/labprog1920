@@ -28,7 +28,7 @@ void *initStorage(int size) {
 }
 
 void *lookUp(void *storage, Position *pos) {
-    return qt_lookup((QuadTree*) storage, pos);
+    return qt_lookup((QuadTree *) storage, pos);
 }
 
 void insert(void *storage, Position *pos, void *toInsert) {
@@ -36,15 +36,15 @@ void insert(void *storage, Position *pos, void *toInsert) {
 }
 
 void *delete(void *storage, Position *pos) {
-    return qt_delete((QuadTree*) storage, pos);
+    return qt_delete((QuadTree *) storage, pos);
 }
 
 void iterateAllPoints(void *storage, void (*toCall)(PointStorage *)) {
-    q_iterateAllPoints((QuadTree *) storage, (void (*) (void*)) toCall);
+    q_iterateAllPoints((QuadTree *) storage, (void (*)(void *)) toCall);
 }
 
 void freeStorage(void *storage) {
-    freeQuad((QuadTree*) storage);
+    freeQuad((QuadTree *) storage);
 }
 
 #else
@@ -90,15 +90,17 @@ void freePS(PointStorage *ps) {
         gs_freeHP(ps->opponentHitPoint);
     }
 
+    if (ps->ownHitPoint != NULL) {
+        gs_freeHP(ps->ownHitPoint);
+    }
+
     free(ps);
 
 }
 
-HitPoint *initHitPoint(Position *pos, int isHit) {
+HitPoint *initHitPoint(int isHit) {
 
     HitPoint *point = malloc(sizeof(HitPoint));
-
-    point->pos = pos;
 
     point->hit = isHit;
 
@@ -109,13 +111,7 @@ int gs_hasHit(HitPoint *point) {
     return point->hit;
 }
 
-Position *gs_getPos(HitPoint *point) {
-    return point->pos;
-}
-
 void gs_freeHP(HitPoint *hp) {
-    p_free(gs_getPos(hp));
-
     free(hp);
 }
 
@@ -138,7 +134,50 @@ GameStorage *initGameStorage(int size) {
 
 void freeGameStorage(GameStorage *gs) {
 
+    //Release all the Piece in board data
+
+    char removed[gs->size][gs->size];
+
+    for (int i = 0; i < gs->size; i++) {
+        for (int j = 0; j < gs->size; j++) {
+            removed[i][j] = 0;
+        }
+    }
+
+    LinkedList *toRemove = ll_initList();
+
+    Position toSearch;
+
+    for (int x = 0; x < gs->size; x++) {
+
+        for (int y = 0; y < gs->size; y++) {
+
+            p_setX((&toSearch), x);
+            p_setY((&toSearch), y);
+
+            PointStorage *ps = lookUp(gs->data, &toSearch);
+
+            if (ps != NULL && ps->piece != NULL) {
+
+                Position *p = ps->piece->basePos;
+
+                if (removed[p_getBaseX(p)][p_getBaseY(p)]) {
+                    continue;
+                }
+
+                removed[p_getBaseX(p)][p_getBaseY(p)] = 1;
+                ll_addLast(ps->piece, toRemove);
+            }
+
+        }
+    }
+
+    ll_forEach(toRemove, (void (*)(void *)) gs_freePIB);
+
+    ll_free(toRemove);
+
     //Release all the stored points
+
     iterateAllStoredPoints(gs, &freePS);
 
     freeStorage(gs->data);
@@ -303,7 +342,7 @@ HitResponse attemptHitStorage(void *storage, Position *toHit) {
 
     if (point == NULL) {
 
-        insert(storage, toHit, initPS(initHitPoint(toHit, 0), NULL, NULL));
+        insert(storage, toHit, initPS(initHitPoint(0), NULL, NULL));
 
         return hitNothing();
     }
@@ -318,7 +357,7 @@ HitResponse attemptHitStorage(void *storage, Position *toHit) {
         isHit = 1;
     }
 
-    point->opponentHitPoint = initHitPoint(toHit, isHit);
+    point->opponentHitPoint = initHitPoint(isHit);
 
     return hitBoat(point->piece);
 
@@ -347,7 +386,7 @@ void registerHit(GameStorage *storage, Position *pos, int result) {
 
     void *position = lookUp(storageObj, pos);
 
-    HitPoint *ourHitPoint = initHitPoint(pos, result);
+    HitPoint *ourHitPoint = initHitPoint(result);
 
     if (position == NULL) {
         position = initPS(NULL, NULL, ourHitPoint);

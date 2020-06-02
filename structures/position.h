@@ -3,6 +3,8 @@
 
 #define p_getBaseX(p) (p->x)
 #define p_getBaseY(p) (p->y)
+#define p_setX(p, x) (p->x = x)
+#define p_setY(p, y) (p->y = y)
 
 typedef enum {
     P_UP,//UP is 0º
@@ -48,6 +50,8 @@ Position *addToCoords(Position *, int x, int y);
  * @return
  */
 Position *addToWithDirection(Position *, Position *, PlacedDirection);
+
+void printPos(Position *);
 
 void p_free(Position *);
 
