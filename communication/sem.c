@@ -46,7 +46,7 @@ int semPost() {
 
     int result = sem_post(sem);
 
-    printf("Sem post called, result %d, new sem value: %d \n",result, semValue());
+    //printf("Sem post called, result %d, new sem value: %d \n",result, semValue());
 
     return result;
 }

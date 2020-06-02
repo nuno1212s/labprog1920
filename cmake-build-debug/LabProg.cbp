@@ -78,16 +78,16 @@
 				</MakeCommands>
 			</Target>
 		</Build>
+		<Unit filename="/home/nuno/CLionProjects/labprog1920/communication/buffered_communication.c">
+			<Option target="LabProg"/>
+		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/labprog1920/communication/buffered_communication.h">
+			<Option target="LabProg"/>
+		</Unit>
 		<Unit filename="/home/nuno/CLionProjects/labprog1920/communication/communications.c">
 			<Option target="LabProg"/>
 		</Unit>
 		<Unit filename="/home/nuno/CLionProjects/labprog1920/communication/communications.h">
-			<Option target="LabProg"/>
-		</Unit>
-		<Unit filename="/home/nuno/CLionProjects/labprog1920/communication/pipes.c">
-			<Option target="LabProg"/>
-		</Unit>
-		<Unit filename="/home/nuno/CLionProjects/labprog1920/communication/pipes.h">
 			<Option target="LabProg"/>
 		</Unit>
 		<Unit filename="/home/nuno/CLionProjects/labprog1920/communication/same_shell.c">
@@ -100,6 +100,18 @@
 			<Option target="LabProg"/>
 		</Unit>
 		<Unit filename="/home/nuno/CLionProjects/labprog1920/communication/sem.h">
+			<Option target="LabProg"/>
+		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/labprog1920/communication/sharedmem.c">
+			<Option target="LabProg"/>
+		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/labprog1920/communication/sharedmem.h">
+			<Option target="LabProg"/>
+		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/labprog1920/communication/sockets.c">
+			<Option target="LabProg"/>
+		</Unit>
+		<Unit filename="/home/nuno/CLionProjects/labprog1920/communication/sockets.h">
 			<Option target="LabProg"/>
 		</Unit>
 		<Unit filename="/home/nuno/CLionProjects/labprog1920/communication/text.c">

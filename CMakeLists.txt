@@ -11,7 +11,7 @@ add_executable(LabProg main.c structures/position.h structures/position.c struct
         communication/communications.h storagestructures/bitmap.c storagestructures/bitmap.h communication/text.c
         communication/text.h communication/sem.c communication/sem.h graphics/shell.c graphics/shell.h graphics/shell.c
         communication/same_shell.c communication/same_shell.h gameplay.c gameplay.h structures/gamepieces.c
-        structures/gamepieces.h communication/pipes.c communication/pipes.h)
+        structures/gamepieces.h communication/sharedmem.c communication/sharedmem.h communication/sockets.c communication/sockets.h communication/buffered_communication.c communication/buffered_communication.h)
 
 target_compile_options(LabProg PUBLIC -fsanitize=address)
 target_link_libraries(LabProg m pthread rt -fsanitize=address)
