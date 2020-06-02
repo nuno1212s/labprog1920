@@ -284,4 +284,6 @@ void p_destroy() {
     } else {
         closeSlave();
     }
+
+    semDestroy();
 }

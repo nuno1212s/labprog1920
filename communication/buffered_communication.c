@@ -13,6 +13,7 @@
 
 #endif
 
+//Definitions for functions to control the buffer writes / reads
 static void startWriter();
 
 static void writeToBuffer(void *toWrite, size_t size);

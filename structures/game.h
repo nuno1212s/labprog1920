@@ -34,16 +34,6 @@ struct Hit_ {
 
 };
 
-struct SearchingForGame_ {
-
-    struct PossiblePieces_ *pieces;
-
-    struct Player_ *player;
-
-    int size;
-
-};
-
 struct Game_ {
 
     int gameID;
@@ -75,13 +65,11 @@ typedef struct Player_ Player;
 
 typedef struct Game_ Game;
 
-typedef struct SearchingForGame_ SearchingForGame;
-
 typedef struct Hit_ Hit;
 
 
 /**
- * Initialize a game instance with the given atributes
+ * Initialize a game instance with the given attributes
  *
  * @param playerCount The amount of players
  * @param traySize The size of the game tray
@@ -97,10 +85,10 @@ void freeGame(Game *);
  *
  * @param name The name of the player. This parameter is duplicated, so it can be safely freed afterwards
  * @param size The size of the game tray
- * @param isHost Whether this is the local player instance
+ * @param isLocal Whether this is the local player instance
  * @return
  */
-Player *initPlayer(char *name, int size, int isHost);
+Player *initPlayer(char *name, int size, int isLocal);
 
 Player *getPlayer(Game *, int);
 
@@ -108,10 +96,21 @@ Player *getCurrentPlayer(Game *);
 
 Player *getOtherPlayer(Game *);
 
+/**
+ * Move the turn to the next player
+ */
 void goToNextPlayer(Game *);
 
+/**
+ * Register a piece that the player has tried to place in the given position and direction
+ * @return
+ */
 PieceInBoard *addPieceChosen(Player *, Position *, Piece *, PlacedDirection);
 
+/**
+ * Check if a player can place a given piece in a given position with a given direction
+ * @return
+ */
 int canPlacePiece(Player *, Position *, Piece *, PlacedDirection);
 
 /**
@@ -146,22 +145,15 @@ void registerPlayResult(Game *,Player *, Position *, HitType type);
  */
 int hasFinished(Game *g);
 
+/**
+ * Randomly place the pieces that the player has not yet placed
+ * @param size
+ */
 void randomizePiecesLeft(Player *, int size, PieceInBoard **, PossiblePieces *);
 
-SearchingForGame *randomizePieces(Player *, int size);
-
-SearchingForGame *initGameForPlayer(Player *, int size);
-
-void freePlayer(Player *);
-
-SearchingForGame *initSearchGame(PossiblePieces *, int, Player *);
-
 /**
- * Deleting the Search game does not delete the player objects
- *
- * So the player object from this searching game can be safely used in the game object
+ * Free the given player object
  */
-void deleteSearchGame(SearchingForGame *);
-
+void freePlayer(Player *);
 
 #endif //LABPROG_GAME_H

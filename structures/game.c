@@ -224,7 +224,7 @@ int hasFinished(Game *g) {
 }
 //(13, 1) (12, 1) (11, 1)
 
-Player *initPlayer(char *name, int size, int isHost) {
+Player *initPlayer(char *name, int size, int isLocal) {
 
     Player *player = malloc(sizeof(Player));
 
@@ -234,7 +234,7 @@ Player *initPlayer(char *name, int size, int isHost) {
         player->name = NULL;
     }
 
-    if (isHost) {
+    if (isLocal) {
         player->storage = initGameStorage(size);
     } else {
         player->storage = NULL;
