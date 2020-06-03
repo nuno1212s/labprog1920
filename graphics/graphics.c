@@ -12,10 +12,6 @@ GRAPHICS getGraphics() {
     return graphicsType;
 }
 
-GAME_TYPE g_readGameType() {
-
-}
-
 PossiblePieces *g_readPossiblePieces(Game *game) {
     switch (graphicsType) {
 

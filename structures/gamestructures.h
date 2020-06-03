@@ -98,6 +98,10 @@ void removePlacedPiece(GameStorage *, PieceInBoard *);
  */
 HitResponse attemptHit(GameStorage *, Position *);
 
+/**
+ * Get the point data stored in the given position
+ * @return
+ */
 PointStorage *getAtPosition(GameStorage *, Position *);
 
 /**
@@ -119,6 +123,14 @@ void registerHit(GameStorage *, Position *, int result);
  */
 int hasBeenDestroyed(GameStorage *, PieceInBoard *);
 
+/**
+ * Calculate the new position that a piece will occupy when placed in the position base with the direction dir.
+ *
+ * @param piece The piece to place
+ * @param base The location to place it in
+ * @param dir The direction to place the ball in
+ * @return
+ */
 Position **calculateNewPositions(Piece *piece, Position *base, PlacedDirection dir);
 
 void iterateAllStoredPoints(GameStorage *, void (*)(PointStorage *));

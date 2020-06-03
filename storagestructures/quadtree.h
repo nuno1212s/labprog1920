@@ -67,16 +67,39 @@ typedef struct QuadTree_ QuadTree;
  */
 QuadTree *initQuadTree(int dimensions);
 
+/**
+ * Gets the value stored in a Quad Point
+ * @return
+ */
 void *getValue(QuadPoint *);
 
+/**
+ * Insert a value into the given quad tree and position
+ */
 void qt_insert(QuadTree *, Position *, void *);
 
+/**
+ * Lookup the value that is stored in a quadtree position
+ * @return
+ */
 void* qt_lookup(QuadTree *, Position *);
 
+/**
+ * Delete the value that is stored in the quad tree in the given position
+ * @return
+ */
 void* qt_delete(QuadTree *, Position *);
 
+/**
+ * Iterate all points of the quad tree and apply a function to them
+ */
 void q_iterateAllPoints(QuadTree *, void (*)(void *));
 
+/**
+ * Free the memory taken by the quad tree.
+ *
+ * This does not free all the data that is stored in the quadtree, only the tree structure itself.
+ */
 void freeQuad(QuadTree *);
 
 void printQuad(QuadTree *);
