@@ -34,6 +34,13 @@ struct Hit_ {
 
 };
 
+/**
+ * The structure that represents the Game and it's state
+ *
+ * Stores the ID of the game, the amount of players, the size of the game tray,
+ * The player objects themselves, the current player (Player that has the turn to play)
+ * And the pieces that the players started the game with
+ */
 struct Game_ {
 
     int gameID;

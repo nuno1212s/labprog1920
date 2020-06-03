@@ -493,7 +493,7 @@ static BitMatrix *readMatrix() {
 void txt_sendGameInfo(Game *game) {
     startWriter();
 
-    fprintf(fp, "%d %d\n", game->gameID, game->currentPlayerIndex);
+    fprintf(fp, "%d %d\n", g_gameID(game), g_currentPlayer(game));
 
     closeFP();
 }
@@ -515,8 +515,8 @@ void txt_readGameInfo(Game *game) {
 
     int currentPlayer = (int) strtol(data, NULL, 10);
 
-    game->currentPlayerIndex = currentPlayer;
-    game->gameID = gameID;
+    g_currentPlayer(game) = currentPlayer;
+    g_gameID(game) = gameID;
 
     closeFP();
 }

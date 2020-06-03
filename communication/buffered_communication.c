@@ -335,9 +335,9 @@ PossiblePieces *bf_receivePossiblePieces(Game *game) {
 void bf_sendGameInfo(Game *game) {
     startWriter();
 
-    writeToBuffer(&game->gameID, sizeof(int));
+    writeToBuffer(&g_gameID(game), sizeof(int));
 
-    writeToBuffer(&game->currentPlayerIndex, sizeof(int));
+    writeToBuffer(&g_currentPlayer(game), sizeof(int));
 
     endWriter();
 }
@@ -345,9 +345,9 @@ void bf_sendGameInfo(Game *game) {
 void bf_readGameInfo(Game *game) {
     startReader();
 
-    readFromBuffer(&game->gameID, sizeof(int));
+    readFromBuffer(&g_gameID(game), sizeof(int));
 
-    readFromBuffer(&game->currentPlayerIndex, sizeof(int));
+    readFromBuffer(&g_currentPlayer(game), sizeof(int));
 
     endReader();
 }
