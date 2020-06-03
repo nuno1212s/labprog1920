@@ -1,4 +1,4 @@
-#Battle Ship
+# Battle Ship
 
 This is a C implementation of the popular game Battle Ship
 
