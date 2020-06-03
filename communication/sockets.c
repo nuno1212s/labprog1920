@@ -12,7 +12,7 @@
 #define BUFF_SIZE 1024
 #define PORT 8080
 
-#define IP_ADDR "127.0.0.1"
+static char *IP_ADDR;
 
 static int isHost;
 
@@ -72,6 +72,13 @@ static void initHost() {
 }
 
 static void initSlave() {
+
+    //An IP address with the format 000.000.000.000 will take 16 bytes of memory
+    IP_ADDR = malloc(sizeof(char) * 16);
+
+    printf("Please insert the IP address of the host (127.0.0.1) if the host is on the same machine\n");
+
+    scanf("%15s", IP_ADDR);
 
     if ((openSocket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         perror("Failed to create socket\n");
@@ -170,6 +177,8 @@ void s_waitForOtherPlayerToChoosePieces() {
 }
 
 void s_destroy() {
+
+    free(IP_ADDR);
 
     if (isHost) {
         close(openSocket_fd);

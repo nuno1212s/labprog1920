@@ -466,7 +466,7 @@ static Piece *readPiece(Piece *prev) {
 
 static BitMatrix *readMatrix() {
 
-    BitMatrix *matrix = createBitMatrix(PIECE_MATRIX_ROWS, PIECE_MATRIX_COLS, MATRIX_WORD_SIZE);
+    BitMatrix *matrix = createBitMatrix(PIECE_MATRIX_ROWS, PIECE_MATRIX_COLS, PIECE_MATRIX_WORD_SIZE);
 
     if (fgets(BUFFER, BUFFER_SIZE, fp) == 0) {
         perror("FAILED TO READ MATRIX.");

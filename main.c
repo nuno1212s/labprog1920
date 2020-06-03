@@ -1,15 +1,9 @@
 #include <stdio.h>
 
-#include "graphics/graphics.h"
-#include <unistd.h>
-#include <stdlib.h>
-
 #define HOST 1
 #define SLAVE 0
 
 static void initShells(int argc, char *argv[]);
-
-#define TWO_SHELL
 
 #ifdef ONE_SHELL
 
@@ -21,6 +15,10 @@ void initShells(int argc, char *argv[]) {
 
 #elif defined(TWO_SHELL)
 
+#include "graphics/graphics.h"
+#include <unistd.h>
+#include <stdlib.h>
+
 void initShells(int argc, char *argv[]) {
 
     int split = 0;
@@ -28,16 +26,33 @@ void initShells(int argc, char *argv[]) {
     if (argc >= 2) {
         split = (int) strtol(argv[1], NULL, 10);
     } else {
-        printf("Insert %d for host\n", HOST);
-
-        scanf("%d", &split);
+        //If no args provided on startup, assumed to be the host.
+        split = HOST;
     }
 
     if (split == HOST) {
-        startGame(split);
+#ifdef NETWORK
+        printf("STARTING THE HOST PROGRAM.\n");
 
-        return;
-        sleep(1);
+        printf("1) Start the client program on this machine. (The IP Address is 127.0.0.1 in this case)\n");
+
+        printf("2) Start the client program on another machine. (Requires user action, use ./battleship 0 to start the program as client)\n");
+
+        int choice;
+
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                break;
+            case 2:
+                startGame(split);
+                return;
+            default:
+                printf("INVALID OPTION, Starting client on this machine...\n");
+                break;
+        }
+#endif
         pid_t pid = fork();
 
         char cwd[1024];
@@ -48,7 +63,11 @@ void initShells(int argc, char *argv[]) {
             fprintf(stderr, "Failed to fork process");
         } else if (pid == 0) {
 
-            execlp("gnome-terminal", "gnome-terminal", cwd, "-e", "./LabProg 0", NULL);
+            char cmd[128];
+
+            snprintf(cmd, 128, "%s 0", argv[0]);
+
+            execlp("gnome-terminal", "gnome-terminal", cwd, "-e", cmd, NULL);
 
         } else {
 

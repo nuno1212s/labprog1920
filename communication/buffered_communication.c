@@ -224,7 +224,7 @@ void writeMatrix(BitMatrix *matrix) {
 
 BitMatrix *readMatrix() {
 
-    BitMatrix *matrix = createBitMatrix(PIECE_MATRIX_ROWS, PIECE_MATRIX_COLS, MATRIX_WORD_SIZE);
+    BitMatrix *matrix = createBitMatrix(PIECE_MATRIX_ROWS, PIECE_MATRIX_COLS, PIECE_MATRIX_WORD_SIZE);
 
     int chars;
 

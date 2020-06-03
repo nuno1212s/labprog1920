@@ -16,8 +16,6 @@ static void iterateAllPoints(void *, void (*)(PointStorage *));
 
 static void freeStorage(void *);
 
-#define QUAD
-
 #ifdef QUAD
 
 #include "../storagestructures/quadtree.h"

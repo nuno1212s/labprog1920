@@ -206,8 +206,6 @@ void qt_insert(QuadTree *quad, Position *pos, void *value) {
 
     QuadPoint *point = qt_lookup(quad, pos);
 
-    printf("Inserting point %p\n", point);
-
     if (point == NULL) {
         point = initQuadPoint(pos, value);
     } else {
@@ -215,8 +213,6 @@ void qt_insert(QuadTree *quad, Position *pos, void *value) {
         //Point was already there, just had the refresh the value of it
         return;
     }
-
-    printf("After %p\n", point);
 
     INSERT_RESULT result = insertNode(node, point);
 

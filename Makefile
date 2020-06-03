@@ -3,40 +3,47 @@ CFLAGS=-I.
 
 STORAGE=QUAD
 
-COMMUNICATION=SAME_SHELL
+COMMUNICATION=SHARED_MEM
 
-GS_FLAG=-D $(STORAGE)
+GAME_TYPE=TWO_SHELL
 
-CM_FLAGS=-D $(COMMUNICATION)
+MAIN_FLAGS= -D $(GAME_TYPE) -D $(COMMUNICATION) -D $(STORAGE)
 
 LIBS=-lm -lpthread -lrt
 
 out: main.o storage.o structures.o graphics.o communications.o
-	$(CC) -o battleship
+	$(CC) *.o -o battleship $(LIBS)
 
 main.o:
-	$(CC) -c main.c gameplay.c
+	$(CC) $(MAIN_FLAGS) -c main.c gameplay.c $(LIBS)
 
 graphics.o:
-	$(CC) -c ./graphics/graphics.c ./graphics/shell.c
+	$(CC) $(MAIN_FLAGS) -c ./graphics/graphics.c ./graphics/shell.c $(LIBS)
 
 structures.o:
-	$(CC) $(GS_FLAG) -c ./structures/pieces.c ./structures/position.c ./structures/game.c ./structures/gamepieces.c ./structures/gamestructures.c
+	$(CC) $(MAIN_FLAGS) -c ./structures/pieces.c ./structures/position.c ./structures/game.c ./structures/gamepieces.c ./structures/gamestructures.c $(LIBS)
 
 storage.o:
 ifeq ($(STORAGE), MATRIX)
-	$(CC) -c ./storagestructures/bitmap.c ./storagestructures/linkedlist.c ./storagestructures/matrix.c
+	$(CC) $(MAIN_FLAGS) -c ./storagestructures/bitmap.c ./storagestructures/linkedlist.c ./storagestructures/matrix.c $(LIBS)
 else
-	$(CC) -c ./storagestructures/bitmap.c ./storagestructures/linkedlist.c ./storagestructures/quadtree.c
+	$(CC) $(MAIN_FLAGS) -c ./storagestructures/bitmap.c ./storagestructures/linkedlist.c ./storagestructures/quadtree.c $(LIBS)
 endif
 
 communications.o:
 ifeq ($(COMMUNICATION), TEXT)
-	$(CC) $(CM_FLAGS) -c ./communication/communications.c ./communication/text.c
+	$(CC) $(MAIN_FLAGS) -c ./communication/communications.c ./communication/text.c $(LIBS)
 else
-ifeq ($(COMMUNICATION), PIPES)
-	$(CC) $(CM_FLAGS) -c ./communication/communications.c #TODO
+ifeq ($(COMMUNICATION), SHARED_MEM)
+	$(CC) $(MAIN_FLAGS) -c ./communication/communications.c ./communication/buffered_communication.c ./communication/sem.c ./communication/sharedmem.c $(LIBS)
 else
-	$(CC) $(CM_FLAGS) -c ./communication/communications.c ./communication/same_shell.c
+ifeq ($(COMMUNICATION), NETWORK)
+	$(CC) $(MAIN_FLAGS) -c ./communication/communications.c ./communication/buffered_communication.c ./communication/sockets.c $(LIBS)
+else
+	$(CC) $(MAIN_FLAGS) -c ./communication/communications.c ./communication/same_shell.c $(LIBS)
 endif
 endif
+endif
+
+clean:
+	rm *.o battleship

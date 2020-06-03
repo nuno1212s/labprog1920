@@ -6,15 +6,149 @@
 
 static void showPlayerTray(Player *player);
 
+static int canPlace(int x, int y, BitMatrix *matrix) {
+
+    if (m_getBit(matrix, x, y) == 1) {
+        return 0;
+    }
+
+    for (int aX = -1; aX <= 1; aX++) {
+        for (int aY = -1; aY <= 1; aY++) {
+            if (aX == aY) continue;
+
+            int finalX = x + aX, finalY = y + aY;
+
+            if (finalX < 0 || finalX >= matrix_cols(matrix)) {
+                continue;
+            }
+
+            if (finalY < 0 || finalY >= matrix_rows(matrix)) {
+                continue;
+            }
+
+            if (m_getBit(matrix, finalX, finalY)) {
+                return 1;
+            }
+
+        }
+    }
+
+    return 0;
+}
+
+static Piece *sh_readPiece(Piece *prev) {
+
+    if (prev != NULL) {
+        printf("1) Repeat the previous piece\n");
+
+        printf("2) Create a new piece\n");
+
+        int choice;
+
+        scanf("%d", &choice);
+
+        switch (choice) {
+
+            case 1:
+                return prev;
+            case 2:
+                break;
+            default:
+                return sh_readPiece(prev);
+        }
+    }
+
+    int pieceSize;
+
+    printf("Insert the size of the piece you wish to create \n");
+
+    scanf("%d", &pieceSize);
+
+    char name[25];
+
+    printf("Insert the name of the piece\n");
+
+    scanf("%24s", name);
+
+    BitMatrix *matrix = createBitMatrix(PIECE_MATRIX_ROWS, PIECE_MATRIX_COLS, PIECE_MATRIX_WORD_SIZE);
+
+    int pX, pY;
+
+    int inserted = 0;
+
+    do {
+
+        printf ("Insert the X position of the next piece position\n");
+
+        scanf("%d", &pX);
+
+        printf("Insert the Y position of the next piece position\n");
+
+        scanf("%d", &pY);
+
+        if (canPlace(pX, pY, matrix) || inserted == 0) {
+            m_setBit(matrix, pX, pY, 1);
+
+            inserted++;
+        } else {
+            printf("Failed to add piece position. The position must be connected with another existing point!\n");
+        }
+
+    } while (inserted < pieceSize);
+
+    return initPiece(pieceSize, name, matrix);
+}
+
+static void sh_readPieces(Game *game) {
+
+    int pieceCount;
+
+    printf("Insert the amount of pieces you want to have.\n");
+
+    scanf("%d", &pieceCount);
+
+    Piece *prev = NULL;
+
+    for (int i = 0; i < pieceCount; i++) {
+
+        addPossiblePiece(game, (prev = sh_readPiece(prev)));
+
+    }
+
+}
+
 PossiblePieces *sh_readPossiblePieces(Game *game) {
 
-    createDefaultPossiblePieces(game, game->size);
+    printf("1) Choose the default pieces for the game.\n");
+
+    printf("2) Create your own pieces.\n");
+
+    int choice;
+
+    scanf("%d", &choice);
+
+    switch (choice) {
+        case 1: {
+            createDefaultPossiblePieces(game, game->size);
+            break;
+        }
+        case 2: {
+
+            initPossiblePieces(game);
+
+            sh_readPieces(game);
+
+            break;
+        }
+        default:
+            return sh_readPossiblePieces(game);
+    }
 
     return game->p;
 }
 
 int sh_readGameSize() {
-    //system("clear");
+    system("clear");
 
     printf("Please insert the size of game you want to play. (Between %d and %d)\n", MIN_GAME_SIZE, MAX_GAME_SIZE);
 
@@ -30,7 +164,7 @@ int sh_readGameSize() {
 }
 
 char *sh_readPlayerName() {
-    //system("clear");
+    system("clear");
 
     char *playerNameBuffer = malloc(sizeof(char) * MAX_PLAYER_NAME_SIZE);
 
@@ -42,8 +176,6 @@ char *sh_readPlayerName() {
 }
 
 Position *sh_readPosition() {
-
-    //system("clear");
 
     printf("Insert a position: \n");
 
@@ -170,7 +302,7 @@ void showPlayerTray(Player *player) {
 
 void sh_showPlaceablePieces(Player *game, PossiblePieces *piece, PieceInBoard **placed) {
 
-    //system("clear");
+    system("clear");
 
     printf("Insert your pieces in the desired position %s\n", pl_name(game));
 

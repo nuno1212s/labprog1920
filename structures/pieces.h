@@ -4,7 +4,7 @@
 #include "position.h"
 #include "../storagestructures/bitmap.h"
 
-#define MATRIX_WORD_SIZE 1
+#define PIECE_MATRIX_WORD_SIZE 1
 #define PIECE_MATRIX_ROWS 5
 #define PIECE_MATRIX_COLS 5
 

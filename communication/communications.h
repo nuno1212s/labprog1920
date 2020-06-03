@@ -4,7 +4,6 @@
 #include "../structures/game.h"
 
 //The defines for possible data methods are: SAME_SHELL, TEXT, SHARED_MEM and NETWORK
-#define NETWORK
 
 typedef struct {
 

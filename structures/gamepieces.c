@@ -76,7 +76,7 @@ void createDefaultPossiblePieces(Game *game, int size) {
             lPiece = pieceCount * 0.2,
             weird = pieceCount * 0.1;
 
-    BitMatrix *matrix = createBitMatrix(PIECE_MATRIX_ROWS, PIECE_MATRIX_COLS, MATRIX_WORD_SIZE);
+    BitMatrix *matrix = createBitMatrix(PIECE_MATRIX_ROWS, PIECE_MATRIX_COLS, PIECE_MATRIX_WORD_SIZE);
 
     m_setBit(matrix, 0, 0, 1);
 
@@ -86,7 +86,7 @@ void createDefaultPossiblePieces(Game *game, int size) {
         addPossiblePiece(game, OneBlock);
     }
 
-    BitMatrix *twoBlock = createBitMatrix(PIECE_MATRIX_ROWS, PIECE_MATRIX_COLS, MATRIX_WORD_SIZE);
+    BitMatrix *twoBlock = createBitMatrix(PIECE_MATRIX_ROWS, PIECE_MATRIX_COLS, PIECE_MATRIX_WORD_SIZE);
 
     m_setBit(twoBlock, 0, 0, 1);
     m_setBit(twoBlock, 0, 1, 1);
@@ -97,7 +97,7 @@ void createDefaultPossiblePieces(Game *game, int size) {
         addPossiblePiece(game, TwoBlock);
     }
 
-    BitMatrix *threeBlock = createBitMatrix(PIECE_MATRIX_ROWS, PIECE_MATRIX_COLS, MATRIX_WORD_SIZE);
+    BitMatrix *threeBlock = createBitMatrix(PIECE_MATRIX_ROWS, PIECE_MATRIX_COLS, PIECE_MATRIX_WORD_SIZE);
 
     m_setBit(threeBlock, 0, 0, 1);
     m_setBit(threeBlock, 0, 1, 1);
@@ -109,7 +109,7 @@ void createDefaultPossiblePieces(Game *game, int size) {
         addPossiblePiece(game, ThreePiece);
     }
 
-    BitMatrix *destroyer = createBitMatrix(PIECE_MATRIX_ROWS, PIECE_MATRIX_COLS, MATRIX_WORD_SIZE);
+    BitMatrix *destroyer = createBitMatrix(PIECE_MATRIX_ROWS, PIECE_MATRIX_COLS, PIECE_MATRIX_WORD_SIZE);
 
     m_setBit(destroyer, 0, 0, 1);
     m_setBit(destroyer, 0, 1, 1);
@@ -121,7 +121,7 @@ void createDefaultPossiblePieces(Game *game, int size) {
     for (int i = 0; i < fourPiece; i++)
         addPossiblePiece(game, fourBlock);
 
-    BitMatrix *lThing = createBitMatrix(PIECE_MATRIX_ROWS, PIECE_MATRIX_COLS, MATRIX_WORD_SIZE);
+    BitMatrix *lThing = createBitMatrix(PIECE_MATRIX_ROWS, PIECE_MATRIX_COLS, PIECE_MATRIX_WORD_SIZE);
 
     m_setBit(lThing, 0, 0, 1);
     m_setBit(lThing, 0, 1, 1);
@@ -135,7 +135,7 @@ void createDefaultPossiblePieces(Game *game, int size) {
     for (int i = 0; i < lPiece; i++)
         addPossiblePiece(game, L);
 
-    BitMatrix *twoStripe = createBitMatrix(PIECE_MATRIX_ROWS, PIECE_MATRIX_COLS, MATRIX_WORD_SIZE);
+    BitMatrix *twoStripe = createBitMatrix(PIECE_MATRIX_ROWS, PIECE_MATRIX_COLS, PIECE_MATRIX_WORD_SIZE);
 
     m_setBit(twoStripe, 0, 0, 1);
     m_setBit(twoStripe, 0, 1, 1);

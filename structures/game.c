@@ -3,11 +3,9 @@
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
-#include "../storagestructures/bitmap.h"
 #include "gamestructures.h"
 
 #define MATRIX_THRESHOLD 10
-
 
 Game *initGame(int players, int size, Player **player) {
 
@@ -42,24 +40,6 @@ void freeGame(Game *game) {
     free(game->players);
 
     free(game);
-}
-
-SearchingForGame *initSearchGame(PossiblePieces *pieces, int size, Player *player) {
-
-    SearchingForGame *game = malloc(sizeof(SearchingForGame));
-
-    game->size = size;
-
-    game->pieces = pieces;
-    game->player = player;
-
-    return game;
-}
-
-void deleteSearchGame(SearchingForGame *game) {
-
-    free(game);
-
 }
 
 static Hit destroyed() {
@@ -275,13 +255,6 @@ int getRand(int size) {
 
 }
 
-SearchingForGame *initGameForPlayer(Player *player, int size) {
-
-//    return initSearchGame(getPossiblePieces(), size, player);
-
-    return NULL;
-}
-
 void randomizePiecesLeft(Player *player, int size, PieceInBoard **placed, PossiblePieces *pieces) {
 
     srand(time(0));
@@ -331,15 +304,6 @@ void randomizePiecesLeft(Player *player, int size, PieceInBoard **placed, Possib
         first = first->next;
     }
 
-}
-
-SearchingForGame *randomizePieces(Player *player, int size) {
-//
-//    randomizePiecesLeft(player, size, NULL, getPossiblePieces());
-//
-//    return initSearchGame(getPossiblePieces(), size, player);
-
-    return NULL;
 }
 
 void freePlayer(Player *player) {
